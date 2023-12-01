@@ -1,16 +1,18 @@
+// HomeScreen.js
 import React from 'react';
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import Logo from '../components/Logo'; // Certifique-se de que o caminho está correto
 
 const HomeScreen = ({ navigation }) => {
+  // Atualizado para navegar para a tela correspondente
   const handlePress = (screen) => {
-    // Aqui você pode usar navigation.navigate(screen) para navegar
-    alert(`${screen} Pressed`);
+    navigation.navigate(screen);
   };
 
-  const Icon = ({ name, label, onPress }) => (
-    <TouchableOpacity style={styles.iconWrapper} onPress={onPress}>
+  // Agora cada Icon pode ter sua própria ação de navegação
+  const Icon = ({ name, label, screen }) => (
+    <TouchableOpacity style={styles.iconWrapper} onPress={() => handlePress(screen)}>
       <FontAwesome name={name} size={32} color="#2e7d32" />
       <Text style={styles.iconLabel}>{label}</Text>
     </TouchableOpacity>
@@ -20,16 +22,17 @@ const HomeScreen = ({ navigation }) => {
     <View style={styles.container}>
       <Logo />
       <View style={styles.iconGrid}>
-        <Icon name="bell" label="Alarme" onPress={() => handlePress('Alarme')} />
-        <Icon name="heart" label="Saúde" onPress={() => handlePress('Saúde')} />
-        <Icon name="file-text" label="Receitas" onPress={() => handlePress('Receitas')} />
-        <Icon name="line-chart" label="Histórico DCNT" onPress={() => handlePress('Histórico DCNT')} />
+        {/* Atualize o parâmetro onPress com o nome da tela para a qual deseja navegar */}
+        <Icon name="bell" label="Alarme" screen="Alarme" />
+        <Icon name="heart" label="Saúde" screen="Saúde" />
+        <Icon name="file-text" label="Receitas" screen="Receitas" />
+        <Icon name="line-chart" label="Histórico DCNT" screen="HistóricoDCNT" />
       </View>
-      <Icon name="user" label="Perfil" onPress={() => handlePress('Perfil')} style={styles.profileIcon} />
+      {/* Atualize este Icon para navegar para a PerfilScreen */}
+      <Icon name="user" label="Perfil" screen="Perfil" />
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
