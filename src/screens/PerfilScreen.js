@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,19 +10,21 @@ import {
   Alert,
   Image,
   Platform,
-} from 'react-native';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
-import { db } from '../config/firebaseConfig';
-import RNPickerSelect from 'react-native-picker-select';
-import * as ImagePicker from 'expo-image-picker';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import DateTimePicker from '@react-native-community/datetimepicker';
+} from "react-native";
+import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
+import { doc, getDoc, updateDoc, Timestamp } from "firebase/firestore";
+import { db } from "../config/firebaseConfig";
+import RNPickerSelect from "react-native-picker-select";
+import * as ImagePicker from "expo-image-picker";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { collection, getDocs } from "firebase/firestore";
+import { Picker } from "@react-native-picker/picker";
 
 const auth = getAuth();
-const calendarIcon = require('../assets/icones/calendario.png');
+const calendarIcon = require("../assets/icones/calendario.png");
 
-const PerfilScreen = () => {
+const PerfilScreen = (props) => {
   const [userData, setUserData] = useState({
     fullName: "",
     birthDate: new Date(), // Inicialize com um objeto Date
@@ -44,26 +46,23 @@ const PerfilScreen = () => {
   const [availableBloodTypes, setAvailableBloodTypes] = useState([]);
   const [date, setDate] = useState(new Date()); // Estado para gerenciar a data
   const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
+  const [availableRaces, setAvailableRaces] = useState([]);
+  const { navigation } = props; // Aqui, desestruturamos 'navigation' de 'props'
 
-
-   // Função para mostrar o DateTimePicker
-   const showDatePicker = () => {
+  // Função para mostrar o DateTimePicker
+  const showDatePicker = () => {
     setIsDatePickerVisible(true);
   };
 
-  // Função chamada quando uma data é selecionada
   const handleDateChange = (event, selectedDate) => {
     const currentDate = selectedDate || date;
-    setIsDatePickerVisible(Platform.OS === 'ios'); // Para iOS, mantenha o picker após a seleção
-    setDate(currentDate); // Atualize o estado da data
+    setIsDatePickerVisible(Platform.OS === "ios"); // Esconda o DatePicker para Android após a seleção
+    setDate(currentDate); // Atualize o estado 'date' com a nova data
     setUserData({
       ...userData,
-      birthDate: Timestamp.fromDate(currentDate), // Atualize o estado do usuário com o Timestamp
+      birthDate: currentDate.toLocaleDateString("pt-BR"), // Atualize a data de nascimento no estado 'userData'
     });
   };
-
-
-
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -72,7 +71,11 @@ const PerfilScreen = () => {
         fetchUserProfile(user.uid);
       }
     });
+
+    fetchRaces(); // Chama a função para carregar as raças
+
     setAvailableBloodTypes(["A+", "O-", "AB+", "AB-"]);
+
     return () => unsubscribe();
   }, []);
 
@@ -81,29 +84,96 @@ const PerfilScreen = () => {
   };
 
   const fetchUserProfile = async (uid) => {
-    const userRef = doc(db, "users", uid);
-    const userSnap = await getDoc(userRef);
-
-    if (userSnap.exists()) {
-      const data = userSnap.data();
-      // Se data.birthDate for um Timestamp, converta-o para uma string no formato DD/MM/YYYY
-      const birthDate = data.birthDate
-        ? `${data.birthDate.toDate().getUTCDate()}/${
-            data.birthDate.toDate().getUTCMonth() + 1
-          }/${data.birthDate.toDate().getUTCFullYear()}`
-        : "";
-      setUserData({ ...data, birthDate, email: auth.currentUser?.email });
-    } else {
-      Alert.alert("Erro", "Perfil do usuário não encontrado.");
+    try {
+      const userRef = doc(db, "users", uid);
+      const userSnap = await getDoc(userRef);
+  
+      if (userSnap.exists()) {
+        let userProfileData = userSnap.data();
+        let raceId = userProfileData.race;
+        let raceDescription = "Não especificado"; // Descrição padrão se não encontrar a raça
+  
+        // Só faz a busca se raceId é uma string e não é "Não especificado"
+        if (typeof raceId === 'string' && raceId !== "Não especificado") {
+          // Extrai o ID real da raça se estiver em formato de path
+          if (raceId.includes('/')) {
+            const parts = raceId.split('/');
+            raceId = parts[parts.length - 1];
+          }
+          
+          // Busca a descrição da raça no banco de dados
+          const raceRef = doc(db, "race", raceId);
+          const raceSnap = await getDoc(raceRef);
+          if (raceSnap.exists()) {
+            raceDescription = raceSnap.data().Cor;
+          } else {
+            console.log('Referência de raça não encontrada:', raceId);
+          }
+        }
+  
+        // Processa a data de nascimento
+        let birthDate = userProfileData.birthDate.toDate ? userProfileData.birthDate.toDate() : new Date();
+  
+        // Atualiza o estado com os dados do usuário
+        setUserData({
+          ...userData,
+          ...userProfileData,
+          birthDate: birthDate.toLocaleDateString("pt-BR"),
+          race: raceDescription, // Use a descrição da raça
+        });
+      } else {
+        Alert.alert("Erro", "Perfil do usuário não encontrado.");
+      }
+    } catch (error) {
+      Alert.alert("Erro", "Falha ao buscar dados do perfil do usuário.");
     }
   };
+  
+  
+
+  function converterDataParaISO(dataString) {
+    const partes = dataString.split("/");
+    if (partes.length !== 3) {
+      throw new Error("Formato de data inválido");
+    }
+    const [dia, mes, ano] = partes;
+    return `${ano}-${mes}-${dia}`;
+  }
 
   const handleSaveProfile = async () => {
     if (userId) {
       const userRef = doc(db, "users", userId);
-      await updateDoc(userRef, userData);
-      Alert.alert("Sucesso", "Perfil atualizado com sucesso!");
+      let birthDateObj = new Date(userData.birthDate); // Use o objeto Date já armazenado no estado
+
+      if (isNaN(birthDateObj)) {
+        Alert.alert("Erro", "Data de nascimento inválida.");
+        return;
+      }
+
+      const updatedUserData = {
+        ...userData,
+        birthDate: Timestamp.fromDate(birthDateObj), // Converte a data para Timestamp
+        race: userData.race ? doc(db, "race", userData.race) : null, // Se 'race' for um ID válido, cria uma referência para o documento
+      };
+
+      try {
+        await updateDoc(userRef, updatedUserData);
+        Alert.alert("Sucesso", "Perfil atualizado com sucesso!");
+      } catch (error) {
+        console.error("Erro ao atualizar perfil:", error);
+        Alert.alert("Erro", "Falha ao atualizar o perfil.");
+      }
     }
+  };
+
+  const fetchRaces = async () => {
+    const raceCollectionRef = collection(db, "race");
+    const raceSnapshot = await getDocs(raceCollectionRef);
+    const races = raceSnapshot.docs.map((doc) => ({
+      label: doc.data().Cor,
+      value: doc.id,
+    }));
+    setAvailableRaces(races); // Atualiza o estado com as raças disponíveis
   };
 
   const handleTextChange = (text, field) => {
@@ -126,6 +196,11 @@ const PerfilScreen = () => {
     }
   };
 
+  // Função para lidar com a mudança dos Switches
+  const handleSwitchChange = (value, field) => {
+    setUserData({ ...userData, [field]: value });
+  };
+
   const uploadImage = async (uri) => {
     try {
       const response = await fetch(uri);
@@ -138,6 +213,21 @@ const PerfilScreen = () => {
     } catch (e) {
       console.error(e);
     }
+  };
+
+  const handleLogout = () => {
+    signOut(auth)
+      .then(() => {
+        // Deslogou com sucesso, redirecione para a tela de login
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Login" }], // O nome 'Login' deve corresponder ao nome da rota definida no Stack.Navigator
+        });
+      })
+      .catch((error) => {
+        // Houve um erro no logout
+        Alert.alert("Erro ao sair", error.message);
+      });
   };
 
   return (
@@ -162,36 +252,43 @@ const PerfilScreen = () => {
           onChangeText={(text) => handleTextChange(text, "fullName")}
         />
 
-<Text style={styles.label}>Data de Nascimento</Text>
-    <TouchableOpacity style={styles.datePickerInput} onPress={showDatePicker}>
-      <Text style={styles.datePickerText}>
-        {date.toLocaleDateString('pt-BR')}
-      </Text>
-      <Image source={calendarIcon} style={styles.calendarIcon} />
-    </TouchableOpacity>
-    
-    {isDatePickerVisible && (
-      <DateTimePicker
-        value={date}
-        mode="date"
-        display="default"
-        onChange={handleDateChange}
-      />
-    )}
-        <Text style={styles.label}>Cor</Text>
-        <TextInput
-          style={styles.input}
-          value={userData.race}
-          onChangeText={(text) => handleTextChange(text, "race")}
-        />
+        <Text style={styles.label}>Data de Nascimento</Text>
+        <TouchableOpacity
+          style={styles.datePickerInput}
+          onPress={showDatePicker}
+        >
+          {/* Converta o objeto Date em uma string antes de renderizá-lo */}
+          <Text style={styles.datePickerText}>
+            {date ? date.toLocaleDateString("pt-BR") : ""}
+          </Text>
+          <Image source={calendarIcon} style={styles.calendarIcon} />
+        </TouchableOpacity>
 
-        <Text style={styles.label}>Email</Text>
-        <TextInput
-          style={styles.input}
-          value={userData.email}
-          onChangeText={(text) => handleTextChange(text, "email")}
-          editable={false}
-        />
+        {isDatePickerVisible && (
+          <DateTimePicker
+            value={date}
+            mode="date"
+            display="default"
+            onChange={handleDateChange}
+          />
+        )}
+
+        <Text style={styles.label}>Cor</Text>
+        <Picker
+          selectedValue={userData.race}
+          onValueChange={(itemValue, itemIndex) =>
+            setUserData({ ...userData, race: itemValue })
+          }
+          style={styles.picker}
+        >
+          {availableRaces.map((race) => (
+            <Picker.Item
+              key={race.value}
+              label={race.label}
+              value={race.value}
+            />
+          ))}
+        </Picker>
 
         <Text style={styles.label}>Tipo Sanguíneo</Text>
         <RNPickerSelect
@@ -262,6 +359,9 @@ const PerfilScreen = () => {
         />
         <TouchableOpacity style={styles.button} onPress={handleSaveProfile}>
           <Text style={styles.buttonText}>Salvar</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.logoutButtonText}>Logout</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -350,12 +450,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
-datePickerInput: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  datePickerInput: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: 'gray',
+    borderColor: "gray",
     borderRadius: 4,
     padding: 10,
     marginTop: 8,
@@ -366,6 +466,18 @@ datePickerInput: {
   calendarIcon: {
     width: 20,
     height: 20,
+  },
+  logoutButton: {
+    backgroundColor: "red", // Cor do botão de logout
+    padding: 15,
+    borderRadius: 5,
+    alignItems: "center",
+    marginTop: 20,
+  },
+  logoutButtonText: {
+    color: "white", // Cor do texto dentro do botão de logout
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 

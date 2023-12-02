@@ -26,7 +26,7 @@ const HomeScreen = ({ navigation }) => {
         <Icon name="bell" label="Alarme" screen="Alarme" />
         <Icon name="heart" label="Saúde" screen="Saúde" />
         <Icon name="file-text" label="Receitas" screen="Receitas" />
-        <Icon name="line-chart" label="Histórico DCNT" screen="HistóricoDCNT" />
+        <Icon name="line-chart" label="Histórico DCNT" screen="DCNT" />
       </View>
       {/* Atualize este Icon para navegar para a PerfilScreen */}
       <Icon name="user" label="Perfil" screen="Perfil" />
