@@ -47,7 +47,8 @@ const PerfilScreen = (props) => {
   const [date, setDate] = useState(new Date()); // Estado para gerenciar a data
   const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
   const [availableRaces, setAvailableRaces] = useState([]);
-  const { navigation } = props; // Aqui, desestruturamos 'navigation' de 'props'
+  const { navigation } = props;
+  const [selectedRace, setSelectedRace] = useState("");
 
   // Função para mostrar o DateTimePicker
   const showDatePicker = () => {
@@ -65,71 +66,127 @@ const PerfilScreen = (props) => {
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUserId(user.uid);
-        fetchUserProfile(user.uid);
+    const unsubscribeAuth = onAuthStateChanged(auth, (authUser) => {
+      if (authUser) {
+        setUserId(authUser.uid); // Atualize o userId aqui
+        fetchUserProfile(authUser.uid);
+      } else {
+        console.log("Nenhum usuário autenticado.");
+        // Aqui você pode tratar o que acontece se não houver usuário autenticado.
       }
     });
+    fetchRaces();
+    fetchBloodTypes();
 
-    fetchRaces(); // Chama a função para carregar as raças
-
-    setAvailableBloodTypes(["A+", "O-", "AB+", "AB-"]);
-
-    return () => unsubscribe();
+    return () => {
+      unsubscribeAuth();
+    };
   }, []);
+
+  useEffect(() => {
+    let isMounted = true; // Adiciona um flag para verificar se o componente está montado
+
+    const fetchUserProfile = async (uid) => {
+      const userRef = doc(db, "users", uid);
+      try {
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists() && isMounted) {
+          const userProfileData = userSnap.data();
+          const birthDate = userProfileData.birthDate.toDate
+            ? userProfileData.birthDate.toDate()
+            : new Date();
+
+          // Defina a raça para o valor correto baseado nos dados carregados
+          const userRaceValue = userProfileData.race;
+
+          // Atualize o estado com os dados do perfil do usuário
+          setUserData({
+            ...userProfileData,
+            birthDate: birthDate.toLocaleDateString("pt-BR"),
+            race: userRaceValue,
+          });
+
+          // Atualize a seleção da raça baseada no valor correspondente da coleção de raças
+          const matchingRace = availableRaces.find(
+            (race) => race.label === userRaceValue
+          );
+          setSelectedRace(matchingRace ? matchingRace.value : "");
+
+          setDate(birthDate);
+        }
+      } catch (error) {
+        console.error("Erro ao buscar perfil do usuário:", error);
+        Alert.alert("Erro ao buscar perfil", error.message);
+      }
+    };
+
+    if (auth.currentUser && availableRaces.length > 0) {
+      fetchUserProfile(auth.currentUser.uid);
+    }
+
+    // Cleanup function para evitar atualizações de estado em componentes desmontados
+    return () => {
+      isMounted = false;
+    };
+  }, [auth.currentUser, availableRaces]);
+
+  const onRaceChange = (value) => {
+    setUserData({ ...userData, race: value });
+  };
+
+  const fetchBloodTypes = async () => {
+    setAvailableBloodTypes(["A+", "O-", "B+", "AB+", "AB-", "O+", "B-"]);
+  };
+
+  const fetchRaces = async () => {
+    const raceCollectionRef = collection(db, "race");
+    try {
+      const raceSnapshot = await getDocs(raceCollectionRef);
+      const races = raceSnapshot.docs.map((doc) => ({
+        label: doc.data().Cor,
+        value: doc.id,
+      }));
+      setAvailableRaces(races);
+    } catch (error) {
+      console.error("Erro ao buscar raças:", error);
+      Alert.alert("Erro ao buscar raças", error.message);
+    }
+  };
 
   const onBloodTypeChange = (itemValue) => {
     setUserData({ ...userData, bloodType: itemValue });
   };
 
   const fetchUserProfile = async (uid) => {
+    const userRef = doc(db, "users", uid);
     try {
-      const userRef = doc(db, "users", uid);
       const userSnap = await getDoc(userRef);
-  
       if (userSnap.exists()) {
-        let userProfileData = userSnap.data();
-        let raceId = userProfileData.race;
-        let raceDescription = "Não especificado"; // Descrição padrão se não encontrar a raça
-  
-        // Só faz a busca se raceId é uma string e não é "Não especificado"
-        if (typeof raceId === 'string' && raceId !== "Não especificado") {
-          // Extrai o ID real da raça se estiver em formato de path
-          if (raceId.includes('/')) {
-            const parts = raceId.split('/');
-            raceId = parts[parts.length - 1];
-          }
-          
-          // Busca a descrição da raça no banco de dados
-          const raceRef = doc(db, "race", raceId);
-          const raceSnap = await getDoc(raceRef);
-          if (raceSnap.exists()) {
-            raceDescription = raceSnap.data().Cor;
-          } else {
-            console.log('Referência de raça não encontrada:', raceId);
-          }
-        }
-  
-        // Processa a data de nascimento
-        let birthDate = userProfileData.birthDate.toDate ? userProfileData.birthDate.toDate() : new Date();
-  
-        // Atualiza o estado com os dados do usuário
+        const userProfileData = userSnap.data();
+        const birthDate = userProfileData.birthDate.toDate
+          ? userProfileData.birthDate.toDate()
+          : new Date();
+
+        const raceValue = availableRaces.find(
+          (race) => race.label === userProfileData.race
+        )?.value;
+
         setUserData({
-          ...userData,
-          ...userProfileData,
-          birthDate: birthDate.toLocaleDateString("pt-BR"),
-          race: raceDescription, // Use a descrição da raça
+          ...userProfileData, // Dados recuperados do Firestore
+          birthDate: birthDate.toLocaleDateString("pt-BR"), // Data de nascimento formatada
+          race: raceValue || "", // Use o valor correspondente encontrado
         });
+
+        setDate(birthDate);
       } else {
+        console.error("Usuário não encontrado.");
         Alert.alert("Erro", "Perfil do usuário não encontrado.");
       }
     } catch (error) {
-      Alert.alert("Erro", "Falha ao buscar dados do perfil do usuário.");
+      console.error("Erro ao buscar perfil do usuário:", error);
+      Alert.alert("Erro ao buscar perfil", error.message);
     }
   };
-  
-  
 
   function converterDataParaISO(dataString) {
     const partes = dataString.split("/");
@@ -140,40 +197,56 @@ const PerfilScreen = (props) => {
     return `${ano}-${mes}-${dia}`;
   }
 
+  const [isSaving, setIsSaving] = useState(false); // Adiciona um estado para o indicador de carregamento.
+
   const handleSaveProfile = async () => {
-    if (userId) {
-      const userRef = doc(db, "users", userId);
-      let birthDateObj = new Date(userData.birthDate); // Use o objeto Date já armazenado no estado
-
-      if (isNaN(birthDateObj)) {
-        Alert.alert("Erro", "Data de nascimento inválida.");
-        return;
-      }
-
-      const updatedUserData = {
-        ...userData,
-        birthDate: Timestamp.fromDate(birthDateObj), // Converte a data para Timestamp
-        race: userData.race ? doc(db, "race", userData.race) : null, // Se 'race' for um ID válido, cria uma referência para o documento
-      };
-
-      try {
-        await updateDoc(userRef, updatedUserData);
-        Alert.alert("Sucesso", "Perfil atualizado com sucesso!");
-      } catch (error) {
-        console.error("Erro ao atualizar perfil:", error);
-        Alert.alert("Erro", "Falha ao atualizar o perfil.");
-      }
+    if (!userId) {
+      Alert.alert("Erro", "ID do usuário não definido.");
+      return;
     }
-  };
 
-  const fetchRaces = async () => {
-    const raceCollectionRef = collection(db, "race");
-    const raceSnapshot = await getDocs(raceCollectionRef);
-    const races = raceSnapshot.docs.map((doc) => ({
-      label: doc.data().Cor,
-      value: doc.id,
-    }));
-    setAvailableRaces(races); // Atualiza o estado com as raças disponíveis
+    setIsSaving(true);
+
+    try {
+      const birthDateParts = userData.birthDate.split("/");
+      const birthDateObj = new Date(
+        birthDateParts[2],
+        birthDateParts[1] - 1,
+        birthDateParts[0]
+      );
+
+      // Verificar se a data de nascimento é válida
+      if (isNaN(birthDateObj.getTime())) {
+        throw new Error("Data de nascimento inválida");
+      }
+
+      // Ajustar o horário para o início do dia para evitar problemas de fuso horário
+      birthDateObj.setHours(0, 0, 0, 0);
+
+      // Encontrar o label da raça com base no valor selecionado
+      const raceLabel = availableRaces.find(
+        (race) => race.value === userData.race
+      )?.label;
+
+      // Se a raça selecionada não estiver disponível, lance um erro
+      if (!raceLabel) {
+        throw new Error("Raça selecionada não é válida");
+      }
+
+      // Atualizar o documento do usuário no Firestore
+      await updateDoc(doc(db, "users", userId), {
+        ...userData,
+        birthDate: Timestamp.fromDate(birthDateObj), // Salvar a data como Timestamp
+        race: raceLabel, // Salvar o label da raça
+      });
+
+      Alert.alert("Sucesso", "Perfil atualizado com sucesso.");
+    } catch (error) {
+      console.error("Erro ao salvar perfil:", error);
+      Alert.alert("Erro", "Falha ao salvar o perfil: " + error.message);
+    } finally {
+      setIsSaving(false); // Desativar o indicador de carregamento
+    }
   };
 
   const handleTextChange = (text, field) => {
@@ -191,8 +264,15 @@ const PerfilScreen = (props) => {
       quality: 1,
     });
 
-    if (!result.cancelled) {
-      uploadImage(result.assets[0].uri);
+    // Verifique se a seleção não foi cancelada e se a matriz 'assets' está presente
+    if (!result.canceled && result.assets) {
+      // Supondo que só haja uma imagem selecionada, pegue o primeiro item da matriz 'assets'
+      const image = result.assets[0];
+
+      // Agora você pode usar 'image.uri' para acessar o URI da imagem selecionada
+      if (image.uri) {
+        uploadImage(image.uri);
+      }
     }
   };
 
@@ -274,21 +354,19 @@ const PerfilScreen = (props) => {
         )}
 
         <Text style={styles.label}>Cor</Text>
-        <Picker
-          selectedValue={userData.race}
-          onValueChange={(itemValue, itemIndex) =>
-            setUserData({ ...userData, race: itemValue })
-          }
-          style={styles.picker}
-        >
-          {availableRaces.map((race) => (
-            <Picker.Item
-              key={race.value}
-              label={race.label}
-              value={race.value}
-            />
-          ))}
-        </Picker>
+        <RNPickerSelect
+          onValueChange={(value) => {
+            setSelectedRace(value);
+            setUserData({ ...userData, race: value });
+          }}
+          items={availableRaces.map((race) => ({
+            label: race.label,
+            value: race.value,
+          }))}
+          style={pickerSelectStyles}
+          value={selectedRace} // Use o estado selectedRace aqui
+          placeholder={{ label: "Selecione uma cor...", value: null }}
+        />
 
         <Text style={styles.label}>Tipo Sanguíneo</Text>
         <RNPickerSelect
@@ -442,8 +520,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   picker: {
-    height: 10,
-    width: "100%", // Ocupa toda a largura da View contêiner
+    height: 50, // Ajuste a altura conforme necessário
+    width: "100%",
+    // Outros estilos que você possa querer adicionar
   },
   buttonText: {
     color: "white",

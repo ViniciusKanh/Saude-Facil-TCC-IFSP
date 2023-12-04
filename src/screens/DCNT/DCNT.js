@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { View, Text, Modal, TouchableOpacity, StyleSheet } from 'react-native';
-import GlicemiaScreen from './diabetesScreen';
-import PressaoArterialScreen from './PressaoArterialScreen ';
+//DCNT.js
+import React, { useState } from "react";
+import { View, Text, Modal, TouchableOpacity, StyleSheet } from "react-native";
+import GlicemiaScreen from "./diabetesScreen";
+import PressaoArterialScreen from "./PressaoArterialScreen";
 
 const DCNTScreen = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -49,6 +50,7 @@ const DCNTScreen = ({ navigation }) => {
         onRequestClose={() => setPressaoArterialModalVisible(false)}
       >
         <PressaoArterialScreen
+          isModalVisible={isPressaoArterialModalVisible}
           closeModal={() => setPressaoArterialModalVisible(false)}
         />
       </Modal>
@@ -73,6 +75,21 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "#fff",
     fontSize: 18,
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 35,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
   },
 });
 
