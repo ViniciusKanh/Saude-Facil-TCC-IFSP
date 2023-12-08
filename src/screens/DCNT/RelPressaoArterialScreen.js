@@ -1,61 +1,107 @@
+//RelPressaoArterialScreen.js
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Dimensions,
+} from "react-native";
 import { db } from "../../config/firebaseConfig";
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { Dimensions } from "react-native";
+import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
 import { LineChart } from "react-native-chart-kit";
 import { getAuth } from "firebase/auth";
 
-
 const screenWidth = Dimensions.get("window").width;
+const recordsPerPage = 10; // Adicione esta linha para definir quantos registros por página você deseja
 
 const RelPressaoArterialScreen = ({ closeModal }) => {
   const [pressaoData, setPressaoData] = useState([]);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  // ...
 
   useEffect(() => {
-    const auth = getAuth();
-    const user = auth.currentUser;
     const fetchData = async () => {
-      if (user) {
+      setLoading(true);
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      try {
         const q = query(
           collection(db, "pressaoArterial"),
-          where("UsuarioID", "==", user.uid)
+          where("UsuarioID", "==", user.uid),
+          orderBy("DataHora", "desc")
         );
         const querySnapshot = await getDocs(q);
-        const pressoes = querySnapshot.docs
-          .map((doc) => {
-            const data = doc.data();
-            const sistolica = parseFloat(data.Sistolica);
-            const diastolica = parseFloat(data.Diastolica);
-            if (!isNaN(sistolica) && !isNaN(diastolica)) {
-              return {
-                id: doc.id,
-                sistolica: sistolica,
-                diastolica: diastolica,
-                humor: data.Humor,
-                tontura: data.Tontura,
-                dataHora: data.DataHora.toDate(),
-              };
-            }
-            return null;
-          })
-          .filter(Boolean);
-        setPressaoData(pressoes);
+        const newData = querySnapshot.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            ...data,
+            DataHora: data.DataHora.toDate(),
+            Sistolica: Number(data.Sistolica),
+            Diastolica: Number(data.Diastolica),
+          };
+        });
+        setPressaoData(newData);
+      } catch (error) {
+        console.error("Erro ao buscar dados: ", error);
+      } finally {
+        setLoading(false);
       }
     };
+
     fetchData();
   }, []);
 
-  const sistolicaValues = pressaoData.map((p) => p.sistolica);
-  const diastolicaValues = pressaoData.map((p) => p.diastolica);
-  const labels = pressaoData.map(
-    (p) => `${p.dataHora.getDate()}/${p.dataHora.getMonth() + 1}`
+  // Filtrando a última semana
+  const umaSemanaAtras = new Date();
+  umaSemanaAtras.setDate(umaSemanaAtras.getDate() - 7);
+  const dadosFiltrados = pressaoData.filter(
+    (p) => p.DataHora >= umaSemanaAtras
   );
 
-  const exportToPDF = async () => {
-   
+  const totalPages = Math.ceil(pressaoData.length / recordsPerPage); // Correção para calcular o total de páginas
+
+  // Criando as labels e datasets após a filtragem dos dados
+  const labels = dadosFiltrados.map(
+    (p) =>
+      `${p.DataHora.getDate()}/${
+        p.DataHora.getMonth() + 1
+      } ${p.DataHora.getHours()}:${p.DataHora.getMinutes()}`
+  );
+  const sistolicaValues = dadosFiltrados.map((p) => p.Sistolica);
+  const diastolicaValues = dadosFiltrados.map((p) => p.Diastolica);
+
+  // Implementando a lógica de paginação para a tabela
+  const itensPorPagina = 10;
+  const [paginaAtual, setPaginaAtual] = useState(0);
+  const paginas = Math.ceil(dadosFiltrados.length / itensPorPagina);
+
+  const dadosPaginados = pressaoData.slice(
+    currentPage * recordsPerPage,
+    (currentPage + 1) * recordsPerPage
+  );
+
+  // Função para mudar de página
+  const mudarPagina = (novaPagina) => {
+    if (novaPagina >= 0 && novaPagina < totalPages) {
+      // Correção para usar totalPages
+      setCurrentPage(novaPagina);
+    }
   };
-  
+
+  const exportToPDF = async () => {
+    // Aqui você implementará a lógica de exportação para PDF.
+    // Isso geralmente envolve a criação de um documento PDF com os dados e salvando ou compartilhando o arquivo.
+    console.log("Exportar para PDF");
+  };
 
   return (
     <View style={styles.modalOverlay}>
@@ -63,25 +109,50 @@ const RelPressaoArterialScreen = ({ closeModal }) => {
         style={styles.scrollContainer}
         contentContainerStyle={styles.scrollViewContent}
       >
-        <Text style={styles.title}>Relatorio de Pressão Arterial</Text>
+        <Text style={styles.title}>Relatório de Pressão Arterial</Text>
+
         <View style={styles.tableHeader}>
-          <Text style={styles.headerText}>#</Text>
+          <Text style={styles.headerText}>Data/Hora</Text>
           <Text style={styles.headerText}>Sistólica</Text>
           <Text style={styles.headerText}>Diastólica</Text>
           <Text style={styles.headerText}>Humor</Text>
-          <Text style={styles.headerText}>Data</Text>
         </View>
-        {pressaoData.map((pressao, index) => (
-          <View key={pressao.id} style={styles.recordRow}>
-            <Text style={styles.recordCell}>{index + 1}</Text>
-            <Text style={styles.recordCell}>{pressao.sistolica}</Text>
-            <Text style={styles.recordCell}>{pressao.diastolica}</Text>
-            <Text style={styles.recordCell}>{pressao.humor}</Text>
+        {dadosPaginados.map((pressao, index) => (
+          <View key={index} style={styles.recordRow}>
             <Text style={styles.recordCell}>
-              {pressao.dataHora.toLocaleDateString()}
+              {pressao.DataHora
+                ? `${pressao.DataHora.toLocaleDateString()} ${pressao.DataHora.toLocaleTimeString()}`
+                : "Data não disponível"}
             </Text>
+            <Text style={styles.recordCell}>{pressao.Sistolica}</Text>
+            <Text style={styles.recordCell}>{pressao.Diastolica}</Text>
+            <Text style={styles.recordCell}>{pressao.Humor}</Text>
           </View>
         ))}
+
+        <View style={styles.paginationContainer}>
+          <TouchableOpacity
+            onPress={() => setCurrentPage(currentPage - 1)}
+            disabled={currentPage === 0}
+            style={styles.paginationButton}
+          >
+            <Text>Anterior</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.pageNumberText}>
+            {currentPage + 1} de {totalPages}
+          </Text>
+
+          <TouchableOpacity
+            onPress={() => setCurrentPage(currentPage + 1)}
+            disabled={currentPage === totalPages - 1}
+            style={styles.paginationButton}
+          >
+            <Text>Próximo</Text>
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.title}>Historico da Pressão Arterial</Text>
+
         <LineChart
           data={{
             labels: labels,
@@ -120,6 +191,7 @@ const RelPressaoArterialScreen = ({ closeModal }) => {
           >
             <Text style={styles.buttonText}>Exportar para PDF</Text>
           </TouchableOpacity>
+
           <TouchableOpacity
             style={[styles.button, styles.closeButton]}
             onPress={closeModal}
@@ -137,7 +209,8 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.95)", // Semi-transparente para esconder o fundo
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    paddingTop: 20, // Ajustar conforme necessário para mover o conteúdo para baixo
   },
   scrollContainer: {
     flex: 1,
@@ -154,6 +227,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#000",
     marginBottom: 20,
+    // Adicionar paddingTop aqui se você não quiser adicionar no modalOverlay
   },
   tableHeader: {
     alignSelf: "stretch",
@@ -181,7 +255,10 @@ const styles = StyleSheet.create({
   },
   chartContainer: {
     alignSelf: "stretch",
-    marginTop: 20,
+    marginTop: 10,
+    marginRight: 30,  // Garante que a margem direita seja 0
+
+    // Certifique-se de que não há padding ou margin que afete a largura
   },
   buttonContainer: {
     flexDirection: "column",
@@ -207,6 +284,20 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 18,
     fontWeight: "bold",
+  },
+  paginationContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 10,
+  },
+  pageNumberText: {
+    fontSize: 16,
+  },
+  paginationButton: {
+    padding: 10,
+    backgroundColor: "#E0E0E0",
+    borderRadius: 5,
   },
 });
 

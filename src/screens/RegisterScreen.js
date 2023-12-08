@@ -3,6 +3,8 @@ import { View, Alert, TouchableOpacity, Text, TextInput, StyleSheet, Switch } fr
 import { auth, db } from '../config/firebaseConfig'; // Ajuste o caminho conforme necessário
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore'; 
+import Logo from '../components/Logo';
+
 
 const RegisterScreen = () => {
   const [fullName, setFullName] = useState('');
@@ -39,6 +41,7 @@ const RegisterScreen = () => {
 
   return (
     <View style={styles.container}>
+       <Logo width={150} height={150} /> 
       <TextInput style={styles.input} placeholder="Nome Completo" value={fullName} onChangeText={setFullName} />
       <TextInput style={styles.input} placeholder="Data de Nascimento" value={birthDate} onChangeText={setBirthDate} />
       <TextInput style={styles.input} placeholder="Cor" value={race} onChangeText={setRace} />
