@@ -5,6 +5,7 @@ import RegisterScreen from '../screens/RegisterScreen';
 import HomeScreen from '../screens/HomeScreen';
 import PerfilScreen from '../screens/PerfilScreen';
 import DCNTScreen from '../screens/DCNT/DCNT';
+import MedicalPrescriptionScreen from '../screens/medicalPrescriptionScreen'
 
 const Stack = createNativeStackNavigator();
 
@@ -26,6 +27,7 @@ const AppNavigator = () => {
       <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="Perfil" component={PerfilScreen} />
       <Stack.Screen name="DCNT" component={DCNTScreen} />
+      <Stack.Screen name="Receitas" component={MedicalPrescriptionScreen} />
       {/* ... outras telas ... */}
     </Stack.Navigator>
   );
