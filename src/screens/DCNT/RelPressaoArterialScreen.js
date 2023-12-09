@@ -151,39 +151,49 @@ const RelPressaoArterialScreen = ({ closeModal }) => {
             <Text>Próximo</Text>
           </TouchableOpacity>
         </View>
-        <Text style={styles.title}>Historico da Pressão Arterial</Text>
+        <Text style={styles.title}>Histórico de Pressão Arterial</Text>
 
-        <LineChart
-          data={{
-            labels: labels,
-            datasets: [
-              {
-                data: sistolicaValues,
-                color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`,
-                strokeWidth: 2,
+        <ScrollView
+          horizontal={true}
+          showsHorizontalScrollIndicator={true}
+          contentContainerStyle={styles.chartScrollContent}
+        >
+          <LineChart
+            data={{
+              labels: labels,
+              datasets: [
+                {
+                  data: sistolicaValues,
+                  color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`,
+                  strokeWidth: 2,
+                },
+                {
+                  data: diastolicaValues,
+                  color: (opacity = 1) => `rgba(244, 65, 134, ${opacity})`,
+                  strokeWidth: 2,
+                },
+              ],
+            }}
+            width={labels.length * 75} // Altere o multiplicador conforme necessário para espaçamento
+            height={220}
+            chartConfig={{
+              backgroundColor: "#e26a00",
+              backgroundGradientFrom: "#fb8c00",
+              backgroundGradientTo: "#ffa726",
+              decimalPlaces: 2,
+              color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+              labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+              style: {
+                borderRadius: 16,
+                marginHorizontal: 16, // Adicione margem horizontal para evitar corte no gráfico
               },
-              {
-                data: diastolicaValues,
-                color: (opacity = 1) => `rgba(244, 65, 134, ${opacity})`,
-                strokeWidth: 2,
-              },
-            ],
-          }}
-          width={screenWidth}
-          height={220}
-          chartConfig={{
-            backgroundColor: "#e26a00",
-            backgroundGradientFrom: "#fb8c00",
-            backgroundGradientTo: "#ffa726",
-            decimalPlaces: 2,
-            color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-            labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-            style: { borderRadius: 16 },
-            propsForDots: { r: "6", strokeWidth: "2", stroke: "#ffa726" },
-          }}
-          bezier
-          style={styles.chartContainer}
-        />
+              propsForDots: { r: "6", strokeWidth: "2", stroke: "#ffa726" },
+            }}
+            bezier
+            style={styles.chart}
+          />
+        </ScrollView>
+
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={[styles.button, styles.exportButton]}
@@ -229,6 +239,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     // Adicionar paddingTop aqui se você não quiser adicionar no modalOverlay
   },
+  chart: {
+    marginHorizontal: 16, // Adicione margens horizontais para evitar o gráfico de tocar as bordas
+  },
   tableHeader: {
     alignSelf: "stretch",
     flexDirection: "row",
@@ -256,9 +269,13 @@ const styles = StyleSheet.create({
   chartContainer: {
     alignSelf: "stretch",
     marginTop: 10,
-    marginRight: 30,  // Garante que a margem direita seja 0
-
-    // Certifique-se de que não há padding ou margin que afete a largura
+    marginHorizontal: 16, // Isso evitará que o gráfico toque nas bordas laterais
+    marginRight: 30, // Garante que a margem direita seja 0
+  },
+  chartScroll: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   buttonContainer: {
     flexDirection: "column",

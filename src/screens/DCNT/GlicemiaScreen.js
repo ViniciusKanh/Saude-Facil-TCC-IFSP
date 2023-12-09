@@ -27,6 +27,8 @@ const GlicemiaScreen = ({ closeModal }) => {
   const [inJejum, setInJejum] = useState(false);
   const [humor, setHumor] = useState("");
   const [humores, setHumores] = useState([]);
+  const [humorSelecionado, setHumorSelecionado] = useState({});
+
   const auth = getAuth();
   const user = auth.currentUser;
 
@@ -35,12 +37,14 @@ const GlicemiaScreen = ({ closeModal }) => {
       try {
         const querySnapshot = await getDocs(collection(db, "humors"));
         const fetchedHumores = querySnapshot.docs.map((doc) => ({
-          label: doc.data().humores, // Certifique-se de que 'humores' é o campo correto no documento
+          label: doc.data().humores, // Confirme se este é o campo correto
           value: doc.id,
         }));
         setHumores(fetchedHumores);
+        console.log(fetchedHumores);
       } catch (error) {
         console.error("Erro ao buscar humores:", error);
+        Alert.alert("Erro", "Não foi possível buscar os humores.");
       }
     };
 
@@ -67,7 +71,7 @@ const GlicemiaScreen = ({ closeModal }) => {
         Infasting: inJejum,
         ID_user: user.uid,
         Datetime: serverTimestamp(),
-        Humor: humor,
+        Humor: humorSelecionado.label,
       });
       Alert.alert("Sucesso", "Glicemia salva com sucesso!");
       closeModal();
@@ -97,7 +101,10 @@ const GlicemiaScreen = ({ closeModal }) => {
           </View>
           <Text>Humor:</Text>
           <RNPickerSelect
-            onValueChange={setHumor}
+            onValueChange={(value) => {
+              const selectedHumor = humores.find((h) => h.value === value);
+              setHumorSelecionado(selectedHumor || {});
+            }}
             items={humores}
             placeholder={{ label: "Selecione um humor...", value: null }}
             style={pickerSelectStyles}
@@ -225,6 +232,5 @@ const pickerSelectStyles = StyleSheet.create({
     paddingRight: 30,
   },
 });
-
 
 export default GlicemiaScreen;

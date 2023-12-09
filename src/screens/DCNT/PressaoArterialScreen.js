@@ -37,7 +37,7 @@ const PressaoArterialScreen = ({ isModalVisible, closeModal }) => {
     const fetchHumores = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, "humors"));
-        const fetchedHumores = querySnapshot.docs.map(doc => ({
+        const fetchedHumores = querySnapshot.docs.map((doc) => ({
           label: doc.data().humores, // Confirme se este é o campo correto
           value: doc.id,
         }));
@@ -48,7 +48,7 @@ const PressaoArterialScreen = ({ isModalVisible, closeModal }) => {
         Alert.alert("Erro", "Não foi possível buscar os humores.");
       }
     };
-  
+
     fetchHumores();
   }, []);
 
@@ -117,14 +117,14 @@ const PressaoArterialScreen = ({ isModalVisible, closeModal }) => {
           />
           <Text>Humor:</Text>
           <RNPickerSelect
-  onValueChange={(value) => {
-    const selectedHumor = humores.find(h => h.value === value);
-    setHumorSelecionado(selectedHumor || {});
-  }}
-  items={humores}
-  placeholder={{ label: "Selecione um humor...", value: null }}
-  style={pickerSelectStyles}
-/>
+            onValueChange={(value) => {
+              const selectedHumor = humores.find((h) => h.value === value);
+              setHumorSelecionado(selectedHumor || {});
+            }}
+            items={humores}
+            placeholder={{ label: "Selecione um humor...", value: null }}
+            style={pickerSelectStyles}
+          />
 
           <View style={styles.switchContainer}>
             <Text style={styles.switchLabel}>Tontura ou dor de cabeça? </Text>
