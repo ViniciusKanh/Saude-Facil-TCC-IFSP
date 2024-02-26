@@ -9,7 +9,7 @@ import {
   Dimensions,
 } from "react-native";
 import { db } from "../../config/firebaseConfig";
-import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
+import { collection, query, where, getDocs, orderBy } from "firebase/firestore"; 
 import { LineChart } from "react-native-chart-kit";
 import { getAuth } from "firebase/auth";
 
