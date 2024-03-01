@@ -24,7 +24,7 @@ const HomeScreen = ({ navigation }) => {
       <View style={styles.iconGrid}>
         {/* Atualize o parâmetro onPress com o nome da tela para a qual deseja navegar */}
         <Icon name="bell" label="Alarme" screen="Alarme" />
-        <Icon name="heart" label="Saúde" screen="Saúde" />
+        <Icon name="heart" label="Saúde" screen="InformationSaude" /> 
         <Icon name="file-text" label="Receitas" screen="Receitas" />
         <Icon name="line-chart" label="Histórico DCNT" screen="DCNT" />
       </View>
