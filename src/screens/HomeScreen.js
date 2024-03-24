@@ -23,20 +23,19 @@ const HomeScreen = ({ navigation }) => {
       <Logo />
       <View style={styles.iconGrid}>
         {/* Atualize o parâmetro onPress com o nome da tela para a qual deseja navegar */}
-        <Icon name="bell" label="Alarme" screen="Alarme" />
-        <Icon name="heart" label="Saúde" screen="InformationSaude" /> 
+        <Icon name="bell" label="Lembrete" screen="Lembretes" />
+        <Icon name="heart" label="Perfil" screen="InformationSaude" /> 
         <Icon name="file-text" label="Receitas" screen="Receitas" />
-        <Icon name="line-chart" label="Histórico DCNT" screen="DCNT" />
+        <Icon name="line-chart" label="Pressão / Diabetes" screen="DCNT" />
       </View>
       {/* Atualize este Icon para navegar para a PerfilScreen */}
-      <Icon name="user" label="Perfil" screen="Perfil" />
     </View>
   );
 };
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFAFA',
     alignItems: 'center',
     paddingTop: 20,
   },

@@ -97,7 +97,7 @@ const PressaoArterialScreen = ({ isModalVisible, closeModal }) => {
       <View style={styles.centeredView}>
         <View style={styles.modalView}>
           <Text style={styles.tituloModal}>Registro de Pressão Arterial</Text>
-          <Text>Pressão Sistólica (SYS):</Text>
+          <Text>Pressão Alta (SYS):</Text>
           <TextInput
             style={styles.input}
             placeholder="Insira os Valores Aqui"
@@ -106,7 +106,7 @@ const PressaoArterialScreen = ({ isModalVisible, closeModal }) => {
             value={sistolica}
             onChangeText={setSistolica}
           />
-          <Text>Pressão Diastólica (DIA):</Text>
+          <Text>Pressão Baixa (DIA):</Text>
           <TextInput
             style={styles.input}
             placeholder="Insira os Valores Aqui"

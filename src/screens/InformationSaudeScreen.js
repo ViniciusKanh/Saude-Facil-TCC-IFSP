@@ -1,78 +1,193 @@
-//InformationSaudeScreen.js
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+} from "react-native";
+import { getAuth } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../config/firebaseConfig"; // Certifique-se de que está importando corretamente
+import { useNavigation } from "@react-navigation/native";
 
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
-import { db } from '../config/firebaseConfig';
-import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+// Importe a imagem padrão aqui
+const defaultProfileImage = require("../assets/perfil/profile-pic.jpg");
+
+// Função para classificar a faixa etária com base na idade
+function getClassificationByAge(age) {
+  if (age >= 0 && age <= 12) {
+    return "Criança";
+  } else if (age >= 13 && age <= 17) {
+    return "Adolescente";
+  } else if (age >= 18 && age <= 29) {
+    return "Jovem";
+  } else if (age >= 30 && age <= 59) {
+    return "Adulto";
+  } else if (age >= 60 && age <= 100) {
+    return "Idoso";
+  } else if (age > 100) {
+    return "Ancião";
+  } else {
+    return "Não especificado";
+  }
+}
 
 const InformationSaudeScreen = () => {
   const [userData, setUserData] = useState(null);
-  const [prescriptions, setPrescriptions] = useState([]);
+  const auth = getAuth(); // Instância do Auth
 
   useEffect(() => {
-    const auth = getAuth();
-    const user = auth.currentUser;
-
     const fetchUserData = async () => {
+      const user = auth.currentUser;
       if (user) {
-        const userRef = doc(db, 'users', user.uid);
+        const userRef = doc(db, "users", user.uid);
         const userSnap = await getDoc(userRef);
-
         if (userSnap.exists()) {
           const data = userSnap.data();
-          // Converte o Timestamp de birthDate para uma string legível
-          const birthDate = data.birthDate?.toDate().toLocaleDateString('pt-BR');
-          setUserData({ ...data, birthDate });
+          const birthDate = data.birthDate.toDate();
+          const age = getAge(birthDate);
+          const classification = getClassificationByAge(age);
+          setUserData({
+            ...data,
+            birthDate: birthDate.toLocaleDateString("pt-BR"),
+            age,
+            classification, // Adiciona a classificação ao estado
+          });
         } else {
-          console.log('Usuário não encontrado');
+          console.log("Usuário não encontrado");
         }
       }
     };
 
-    const fetchPrescriptions = async () => {
-      if (user) {
-        const prescQuery = query(collection(db, 'medicalPrescription'), where('ID_users', '==', user.uid));
-        const querySnapshot = await getDocs(prescQuery);
-        const prescData = querySnapshot.docs.map(doc => {
-          const data = doc.data();
-          // Converte o Timestamp de dateTime para uma string legível
-          const dateTime = data.dateTime?.toDate().toLocaleDateString('pt-BR');
-          return { ...data, dateTime };
-        });
-
-        setPrescriptions(prescData);
-      }
-    };
-
     fetchUserData();
-    fetchPrescriptions();
   }, []);
 
-  if (!userData) return <Text>Carregando...</Text>;
+  // Função para calcular a idade com base na data de nascimento
+  function getAge(birthDate) {
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  }
+
+  const calculateIMC = (weight, height) => {
+    if (weight && height) {
+      const heightInMeters = height / 100; // converte a altura de cm para metros
+      const imc = weight / (heightInMeters * heightInMeters);
+      return imc.toFixed(2); // retorna o IMC com duas casas decimais
+    }
+    return null;
+  };
+
+  const getClassificacaoIMC = (imc) => {
+    if (imc < 18.5) {
+      return { classificacao: "Magreza", grau: 0 };
+    } else if (imc >= 18.5 && imc <= 24.9) {
+      return { classificacao: "Normal", grau: 0 };
+    } else if (imc >= 25.0 && imc <= 29.9) {
+      return { classificacao: "Sobrepeso", grau: 1 };
+    } else if (imc >= 30.0 && imc <= 39.9) {
+      return { classificacao: "Obesidade", grau: 2 };
+    } else if (imc > 40.0) {
+      return { classificacao: "Obesidade Grave", grau: 3 };
+    } else {
+      return { classificacao: "Indeterminado", grau: "Indeterminado" };
+    }
+  };
+
+  const imc = calculateIMC(userData?.weight, userData?.height); // Assume que esta função retorna o IMC
+  const classificacao = getClassificacaoIMC(imc);
+
+  // Usaremos o gancho de navegação para lidar com a navegação entre telas
+  const navigation = useNavigation();
+
+  // Adicione funções para lidar com a navegação quando os botões são pressionados
+  const handlePResumoPG = () => {
+    navigation.navigate("InfoSaudePG");
+  };
+
+    // Adicione funções para lidar com a navegação quando os botões são pressionados
+    const handlePressInfoSaude = () => {
+      navigation.navigate("InfSaude");
+    };
+  const handlePressMedicamentos = () => {
+    navigation.navigate("Medication");
+
+    
+  };
+
+  const handlePressLembretes = () => {
+    navigation.navigate("Lembretes");
+  };
+
+  const handlePressDadosPessoais = () => {
+    navigation.navigate("Perfil");
+  };
 
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.section}>
-        <Text style={styles.header}>Perfil do Usuário</Text>
-        <Image source={{ uri: userData.profileImageUrl || 'https://via.placeholder.com/100' }} style={styles.profileImage} />
-        <Text style={styles.info}>Nome: {userData.fullName}</Text>
-        <Text style={styles.info}>Data de Nascimento: {userData.birthDate}</Text>
-        <Text style={styles.info}>Tipo Sanguíneo: {userData.bloodType}</Text>
-        <Text style={styles.info}>Doador de Órgãos: {userData.isOrganDonor ? 'Sim' : 'Não'}</Text>
-        {/* Outras informações */}
-      </View>
-      <View style={styles.section}>
-        <Text style={styles.header}>Prescrições Médicas</Text>
-        {prescriptions.map((prescription, index) => (
-          <View key={index} style={styles.prescriptionCard}>
-            <Text style={styles.info}>Medicamento: {prescription.Medicamento}</Text>
-            <Text style={styles.info}>Tipo: {prescription.type}</Text>
-            <Text style={styles.info}>Data: {prescription.dateTime}</Text>
-            <Image source={{ uri: prescription.file || 'https://via.placeholder.com/200' }} style={styles.prescriptionImage} />
+      <View style={styles.profileHeader}>
+        <Image
+          style={styles.profileImage}
+          source={
+            userData?.profileImageUrl
+              ? { uri: userData.profileImageUrl }
+              : defaultProfileImage
+          }
+        />
+        <View style={styles.profileInfo}>
+          <Text style={styles.profileName}>
+            {userData?.fullName || "Nome do Usuário"}
+          </Text>
+          <Text style={styles.profileBirthDate}>
+            {userData?.birthDate || "Data Nascimento"} -{" "}
+            {userData?.age ? `${userData.age} anos` : ""} (
+            {userData?.classification})
+          </Text>
+          <Text style={styles.healthInfo}>
+            Hipertenso: {userData?.hasHypertension ? "Sim" : "Não"}
+          </Text>
+          <Text style={styles.healthInfo}>
+            Diabético: {userData?.hasDiabetes ? "Sim" : "Não"}
+          </Text>
+          <Text style={styles.healthInfo}>
+            Doador de órgãos: {userData?.isOrganDonor ? "Sim" : "Não"}
+          </Text>
+          <View style={styles.healthInfoContainer}>
+            <Text style={styles.healthInfo}>
+              IMC: {imc} - {classificacao.classificacao} (Grau{" "}
+              {classificacao.grau})
+            </Text>
           </View>
-        ))}
+        </View>
       </View>
+      <TouchableOpacity style={styles.button} onPress={handlePressInfoSaude}>
+        <Text style={styles.buttonText}>Informações de Saúde</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.button} onPress={handlePResumoPG}>
+        <Text style={styles.buttonText}>Resumo da Pressão Arterial e Glicemia</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.button} onPress={handlePressLembretes}>
+        <Text style={styles.buttonText}>Lembretes</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.button} onPress={handlePressMedicamentos}>
+        <Text style={styles.buttonText}>Medicamento</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.button}
+        onPress={handlePressDadosPessoais}
+      >
+        <Text style={styles.buttonText}>Dados Pessoais</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 };
@@ -80,38 +195,66 @@ const InformationSaudeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
+    backgroundColor: "#FFF",
   },
-  section: {
-    marginBottom: 20,
-  },
-  header: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  info: {
-    fontSize: 16,
-    marginBottom: 5,
+  profileHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center", // Centraliza horizontalmente
+    marginVertical: 20, // Espaço vertical para separar da parte superior
   },
   profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 10,
+    width: 120, // Tamanho maior para a imagem
+    height: 120, // Tamanho maior para a imagem
+    borderRadius: 60, // Arredonda a imagem para formar um círculo
+    marginRight: 20, // Espaço entre a imagem e o texto
   },
-  prescriptionCard: {
-    padding: 10,
+  profileInfo: {
+    justifyContent: "center", // Centraliza verticalmente o texto
+    // Não é necessário marginLeft aqui, pois o marginRight na imagem já cria espaço
+  },
+  profileName: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  profileBirthDate: {
+    fontSize: 16,
+  },
+  button: {
+    backgroundColor: "#e8f5e9",
+    padding: 20,
+    margin: 10,
+    borderRadius: 5,
+  },
+  buttonText: {
+    color: "#2e7d32",
+    fontWeight: "bold",
+  },
+  profileImageContainer: {
+    // Ajustar conforme o layout desejado
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    alignSelf: "center", // Centraliza o container da imagem
+    marginTop: 20,
+    overflow: "hidden",
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    marginBottom: 10,
+    borderColor: "#ccc", // ou outra cor de sua preferência
   },
-  prescriptionImage: {
-    width: '100%',
-    height: 200,
-    marginTop: 10,
-    borderRadius: 5,
+  infoContainer: {
+    paddingHorizontal: 20,
+    alignItems: "center", // Centralizar os itens no eixo horizontal
+  },
+  label: {
+    // Estilo para os textos do label
+    fontSize: 18,
+    fontWeight: "bold",
+    marginTop: 8,
+  },
+  healthInfo: {
+    fontSize: 16,
+    color: "#333",
+    marginTop: 4, // Ajuste o valor conforme necessário para o espaçamento
   },
 });
 

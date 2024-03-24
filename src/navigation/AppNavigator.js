@@ -5,8 +5,13 @@ import RegisterScreen from '../screens/RegisterScreen';
 import HomeScreen from '../screens/HomeScreen';
 import PerfilScreen from '../screens/PerfilScreen';
 import DCNTScreen from '../screens/DCNT/DCNT';
-import MedicalPrescriptionScreen from '../screens/medicalPrescriptionScreen'
+import MedicalPrescriptionScreen from '../screens/medicalPrescriptionScreen';
 import InformationSaudeScreen from '../screens/InformationSaudeScreen'; 
+import InfoSaudePGScreen from '../screens/InfoSaudePG'; 
+import MedicationScreen from '../screens/MedicationScreen'; 
+import DadosSaudeSaudeScreen from '../screens/InfSaudeScreen'; 
+import LembretesScreen from '../screens/Lembretes/LembretesScreen'; 
+
 
 
 const Stack = createNativeStackNavigator();
@@ -31,6 +36,12 @@ const AppNavigator = () => {
       <Stack.Screen name="DCNT" component={DCNTScreen} />
       <Stack.Screen name="Receitas" component={MedicalPrescriptionScreen} />
       <Stack.Screen name="InformationSaude" component={InformationSaudeScreen} />
+      <Stack.Screen name="InfoSaudePG" component={InfoSaudePGScreen} /> 
+      <Stack.Screen name="Medication" component={MedicationScreen} /> 
+      <Stack.Screen name="InfSaude" component={DadosSaudeSaudeScreen} /> 
+      <Stack.Screen name="Lembretes" component={LembretesScreen} /> 
+
+
 
       {/* ... outras telas ... */}
     </Stack.Navigator>

@@ -1,4 +1,4 @@
-// PerfilScreen.js
+// InfSaude.js
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -25,12 +25,9 @@ import { Picker } from "@react-native-picker/picker";
 const auth = getAuth();
 const calendarIcon = require("../assets/icones/calendario.png");
 
-const PerfilScreen = (props) => {
+const InfSaudeScreen = (props) => {
   const [userData, setUserData] = useState({
-    fullName: "",
-    birthDate: new Date(), // Inicialize com um objeto Date
     race: "",
-    email: "",
     bloodType: "",
     isOrganDonor: false,
     hasDiabetes: false,
@@ -41,8 +38,8 @@ const PerfilScreen = (props) => {
     profileImageUrl: "",
     height: "",
     weight: "",
-    phoneNumber: "",
   });
+
   const [userId, setUserId] = useState("");
   const [availableBloodTypes, setAvailableBloodTypes] = useState([]);
   const [date, setDate] = useState(new Date()); // Estado para gerenciar a data
@@ -50,7 +47,6 @@ const PerfilScreen = (props) => {
   const [availableRaces, setAvailableRaces] = useState([]);
   const { navigation } = props;
   const [selectedRace, setSelectedRace] = useState("");
-
   // Função para mostrar o DateTimePicker
   const showDatePicker = () => {
     setIsDatePickerVisible(true);
@@ -310,63 +306,89 @@ const PerfilScreen = (props) => {
         Alert.alert("Erro ao sair", error.message);
       });
   };
-
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={styles.contentContainer}
-    >
-      <TouchableOpacity
-        style={styles.profileImageContainer}
-        onPress={handleImagePick}
-      >
-        <Image
-          style={styles.profileImage}
-          source={{ uri: userData.profileImageUrl || defaultAvatar }}
-        />
-      </TouchableOpacity>
+      contentContainerStyle={styles.contentContainer} >    
       <View style={styles.infoContainer}>
-        <Text style={styles.label}>Nome</Text>
-        <TextInput
-          style={styles.input}
-          value={userData.fullName}
-          onChangeText={(text) => handleTextChange(text, "fullName")}
+        <Text style={styles.label}>Cor</Text>
+        <RNPickerSelect
+          onValueChange={(value) => {
+            setSelectedRace(value);
+            setUserData({ ...userData, race: value });
+          }}
+          items={availableRaces.map((race) => ({
+            label: race.label,
+            value: race.value,
+          }))}
+          style={pickerSelectStyles}
+          value={selectedRace} // Use o estado selectedRace aqui
+          placeholder={{ label: "Selecione uma cor...", value: null }}
+        />
+        <Text style={styles.label}>Tipo Sanguíneo</Text>
+        <RNPickerSelect
+          onValueChange={(value) => handleTextChange(value, "bloodType")}
+          items={availableBloodTypes.map((bt) => ({ label: bt, value: bt }))}
+          style={pickerSelectStyles}
+          value={userData.bloodType}
+          useNativeAndroidPickerStyle={false} // desativa o estilo nativo do picker no Android
         />
 
-        <Text style={styles.label}>Data de Nascimento</Text>
-        <TouchableOpacity
-          style={styles.datePickerInput}
-          onPress={showDatePicker}
-        >
-          {/* Converta o objeto Date em uma string antes de renderizá-lo */}
-          <Text style={styles.datePickerText}>
-            {date ? date.toLocaleDateString("pt-BR") : ""}
-          </Text>
-          <Image source={calendarIcon} style={styles.calendarIcon} />
-        </TouchableOpacity>
-
-        {isDatePickerVisible && (
-          <DateTimePicker
-            value={date}
-            mode="date"
-            display="default"
-            onChange={handleDateChange}
-          />
-        )}
-
-
-        <Text style={styles.label}>Telefone de Contato</Text>
+        <Text style={styles.label}>Altura</Text>
         <TextInput
           style={styles.input}
-          value={userData.phoneNumber}
-          onChangeText={(text) => handleTextChange(text, "phoneNumber")}
+          value={userData.height}
+          onChangeText={(text) => handleTextChange(text, "height")}
+        />
+        <Text style={styles.label}>Peso(KG)</Text>
+        <TextInput
+          style={styles.input}
+          value={userData.weight}
+          onChangeText={(text) => handleTextChange(text, "weight")}
+        />
+
+        <Text style={styles.label}>Diabetes?</Text>
+        <Switch
+          value={userData.hasDiabetes}
+          onValueChange={(value) => handleSwitchChange(value, "hasDiabetes")}
+        />
+
+        <Text style={styles.label}>Pressão Alta?</Text>
+        <Switch
+          value={userData.hasHypertension}
+          onValueChange={(value) =>
+            handleSwitchChange(value, "hasHypertension")
+          }
+        />
+
+        <Text style={styles.label}>Teve Infarto?</Text>
+        <Switch
+          value={userData.hadHeartAttack}
+          onValueChange={(value) => handleSwitchChange(value, "hadHeartAttack")}
+        />
+
+        <Text style={styles.label}>Teve AVC?</Text>
+        <Switch
+          value={userData.hadStroke}
+          onValueChange={(value) => handleSwitchChange(value, "hadStroke")}
+        />
+
+        <Text style={styles.label}>Toma Medicamento Controlado?</Text>
+        <Switch
+          value={userData.takesControlledMedication}
+          onValueChange={(value) =>
+            handleSwitchChange(value, "takesControlledMedication")
+          }
+        />
+
+        <Text style={styles.label}>Doador de Órgãos?</Text>
+        <Switch
+          value={userData.isOrganDonor}
+          onValueChange={(value) => handleSwitchChange(value, "isOrganDonor")}
         />
 
         <TouchableOpacity style={styles.button} onPress={handleSaveProfile}>
           <Text style={styles.buttonText}>Salvar</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutButtonText}>Logout</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -382,7 +404,7 @@ const pickerSelectStyles = StyleSheet.create({
     borderColor: "gray",
     borderRadius: 4,
     color: "black",
-    paddingRight: 30, 
+    paddingRight: 30,
   },
   inputAndroid: {
     fontSize: 16,
@@ -395,6 +417,7 @@ const pickerSelectStyles = StyleSheet.create({
     paddingRight: 30, // para garantir que o texto não fique escondido atrás do ícone
   },
 });
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -487,4 +510,5 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PerfilScreen;
+
+export default InfSaudeScreen;
