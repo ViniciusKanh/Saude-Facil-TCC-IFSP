@@ -11,6 +11,8 @@ import InfoSaudePGScreen from '../screens/InfoSaudePG';
 import MedicationScreen from '../screens/MedicationScreen'; 
 import DadosSaudeSaudeScreen from '../screens/InfSaudeScreen'; 
 import LembretesScreen from '../screens/Lembretes/LembretesScreen'; 
+import RelRemindersConsultationScreen from './../screens/Lembretes/Consulta/RelRemindersConsultationScreen';
+
 
 
 
@@ -40,6 +42,8 @@ const AppNavigator = () => {
       <Stack.Screen name="Medication" component={MedicationScreen} /> 
       <Stack.Screen name="InfSaude" component={DadosSaudeSaudeScreen} /> 
       <Stack.Screen name="Lembretes" component={LembretesScreen} /> 
+      <Stack.Screen name="RelRemindersConsultation" component={RelRemindersConsultationScreen} /> 
+
 
 
 

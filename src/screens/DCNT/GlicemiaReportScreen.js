@@ -1,6 +1,13 @@
 // GlicemiaReportScreen.js
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Dimensions,
+} from "react-native";
 import { LineChart } from "react-native-chart-kit";
 import { db } from "../../config/firebaseConfig";
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
@@ -13,9 +20,9 @@ const GlicemiaReportScreen = ({ closeModal }) => {
   const [glicemiaData, setGlicemiaData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
   const auth = getAuth();
   const user = auth.currentUser;
+  const [pressaoData, setPressaoData] = useState([]);
 
   // A ordem dos Hooks aqui está correta, garantindo que sejam chamados incondicionalmente
   const [paginaAtual, setPaginaAtual] = useState(0); // Esse estado parece estar duplicado, considere remover se não estiver em uso
@@ -35,16 +42,11 @@ const GlicemiaReportScreen = ({ closeModal }) => {
           orderBy("Datetime", "desc")
         );
         const querySnapshot = await getDocs(q);
-        const newData = querySnapshot.docs.map((doc) => {
-          const data = doc.data();
-          return {
-            ...data,
-            Datetime: data.Datetime.toDate(),
-            Glicemia: Number(data.Glicemia),
-          };
-        });
+        const newData = querySnapshot.docs.map((doc) => ({
+          ...doc.data(),
+          Datetime: doc.data().Datetime.toDate(),
+        }));
         setGlicemiaData(newData);
-        setTotalPages(Math.ceil(newData.length / recordsPerPage));
       } catch (error) {
         console.error("Erro ao buscar dados de glicemia: ", error);
       } finally {
@@ -53,22 +55,21 @@ const GlicemiaReportScreen = ({ closeModal }) => {
     };
 
     fetchData();
-  }, [user?.uid]); // As dependências devem incluir todas as variáveis externas usadas no efeito
+  }, [user?.uid]);
 
   if (loading) {
     return <Text>Carregando dados...</Text>;
   }
-
   const currentData = glicemiaData.slice(
     currentPage * recordsPerPage,
     (currentPage + 1) * recordsPerPage
   );
 
-    // Funções como exportToPDF e closeModal devem ser declaradas aqui
-    const exportToPDF = () => {
-      console.log("Implemente a exportação para PDF aqui.");
-    };
-  
+  // Funções como exportToPDF e closeModal devem ser declaradas aqui
+  const exportToPDF = () => {
+    console.log("Implemente a exportação para PDF aqui.");
+  };
+
   // Filtrando a última semana
   const umaSemanaAtras = new Date();
   umaSemanaAtras.setDate(umaSemanaAtras.getDate() - 7);
@@ -85,21 +86,34 @@ const GlicemiaReportScreen = ({ closeModal }) => {
     (currentPage + 1) * recordsPerPage
   );
 
-  // Criando as labels e datasets após a filtragem dos dados
-  const labels = dadosFiltrados.map(
+  // Correção para calcular o total de páginas
+  const totalPages = Math.ceil(glicemiaData.length / recordsPerPage);
+
+  // Atualizar a lógica para mudar de página
+  const mudarPagina = (novaPagina) => {
+    if (novaPagina >= 0 && novaPagina < totalPages) {
+      setCurrentPage(novaPagina);
+    }
+  };
+  const labels = glicemiaData.map(
     (p) =>
       `${p.Datetime.getDate()}/${
         p.Datetime.getMonth() + 1
       } ${p.Datetime.getHours()}:${p.Datetime.getMinutes()}`
   );
-  const GlicemiaValues = dadosFiltrados.map((p) => p.Glicemia);
+  const GlicemiaValues = glicemiaData.map((p) => p.Glicemia);
 
-  // Função para mudar de página
-  const mudarPagina = (novaPagina) => {
-    if (novaPagina >= 0 && novaPagina < totalPages) {
-      // Correção para usar totalPages
-      setCurrentPage(novaPagina);
-    }
+  const chartConfig = {
+    backgroundColor: "#e26a00",
+    backgroundGradientFrom: "#fb8c00",
+    backgroundGradientTo: "#ffa726",
+    decimalPlaces: 2,
+    color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+    labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+    style: {
+      borderRadius: 16,
+    },
+    propsForDots: { r: "6", strokeWidth: "2", stroke: "#ffa726" },
   };
 
   return (
@@ -110,44 +124,67 @@ const GlicemiaReportScreen = ({ closeModal }) => {
       >
         <Text style={styles.title}>Relatório de Glicemia</Text>
 
-        <View style={styles.tableHeader}>
-          <Text style={styles.headerText}>Data/Hora</Text>
-          <Text style={styles.headerText}>Glicemia</Text>
-          <Text style={styles.headerText}>Humor</Text>
-        </View>
-
-        {currentData.map((item, index) => (
-          <View key={index} style={styles.recordRow}>
-            <Text style={styles.recordCell}>
-              {item.Datetime.toLocaleDateString()}{" "}
-              {item.Datetime.toLocaleTimeString()}
-            </Text>
-            <Text style={styles.recordCell}>{item.Glicemia}</Text>
-            <Text style={styles.recordCell}>{item.Humor}</Text>
+        <View
+          style={[
+            styles.sectionContainer,
+            { backgroundColor: "#EDF3EF", borderColor: "#9CCC65" },
+          ]}
+        >
+          <View style={styles.tableHeader}>
+            <Text style={styles.headerText}>Data/Hora</Text>
+            <Text style={styles.headerText}>Glicemia</Text>
+            <Text style={styles.headerText}>Humor</Text>
+            <Text style={styles.headerText}>Em Jejum</Text>
           </View>
-        ))}
 
-        <View style={styles.paginationContainer}>
-          <TouchableOpacity
-            onPress={() => setCurrentPage(currentPage - 1)}
-            disabled={currentPage === 0}
-            style={styles.paginationButton}
-          >
-            <Text>Anterior</Text>
-          </TouchableOpacity>
+          {currentData.map((item, index) => {
+            let backgroundColor = "#fff"; // Cor padrão
+            if (item.Glicemia > 100) {
+              backgroundColor = "#ffcccc"; // Vermelho claro para glicemia alta
+            } else if (item.Glicemia < 75) {
+              backgroundColor = "#ccccff"; // Azul claro para glicemia baixa
+            }
 
-          <Text style={styles.pageNumberText}>
-            {currentPage + 1} de {totalPages}
-          </Text>
+            return (
+              <View key={index} style={[styles.recordRow, { backgroundColor }]}>
+                <Text style={styles.recordCell}>
+                  {item.Datetime.toLocaleDateString()}{" "}
+                  {item.Datetime.toLocaleTimeString()}
+                </Text>
+                <Text
+                  style={styles.recordCell}
+                >{`${item.Glicemia} mg/dL`}</Text>
+                <Text style={styles.recordCell}>{item.Humor}</Text>
+                <Text style={styles.recordCell}>
+                  {item.tontura ? "Sim" : "Não"}
+                </Text>
+              </View>
+            );
+          })}
 
-          <TouchableOpacity
-            onPress={() => setCurrentPage(currentPage + 1)}
-            disabled={currentPage === totalPages - 1}
-            style={styles.paginationButton}
-          >
-            <Text>Próximo</Text>
-          </TouchableOpacity>
+          <View style={styles.paginationContainer}>
+            <TouchableOpacity
+              onPress={() => setCurrentPage(currentPage - 1)}
+              disabled={currentPage === 0}
+              style={styles.paginationButton}
+            >
+              <Text>Anterior</Text>
+            </TouchableOpacity>
+
+            <Text style={styles.pageNumberText}>
+              {currentPage + 1} de {totalPages}
+            </Text>
+
+            <TouchableOpacity
+              onPress={() => setCurrentPage(currentPage + 1)}
+              disabled={currentPage === totalPages - 1}
+              style={styles.paginationButton}
+            >
+              <Text>Próximo</Text>
+            </TouchableOpacity>
+          </View>
         </View>
+
         <Text style={styles.title}>Histórico de Glicemia</Text>
 
         <ScrollView
@@ -155,45 +192,45 @@ const GlicemiaReportScreen = ({ closeModal }) => {
           showsHorizontalScrollIndicator={true}
           contentContainerStyle={styles.chartScrollContent}
         >
-        <LineChart
-            data={{
-              labels: labels,
-              datasets: [
-                {
-                  data: GlicemiaValues,
-                  color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`,
-                  strokeWidth: 2,
+          <View
+            style={[
+              styles.sectionContainer,
+              { backgroundColor: "#EDF3EF", borderColor: "#9CCC65" },
+            ]}
+          >
+            <LineChart
+              data={{
+                labels: labels,
+                datasets: [
+                  {
+                    data: GlicemiaValues,
+                    color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`,
+                    strokeWidth: 2,
+                  },
+                ],
+              }}
+              width={labels.length * 100} // Altere o multiplicador conforme necessário para espaçamento
+              height={220}
+              chartConfig={{
+                backgroundColor: "#e26a00",
+                backgroundGradientFrom: "#fb8c00",
+                backgroundGradientTo: "#ffa726",
+                decimalPlaces: 2,
+                color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                style: {
+                  borderRadius: 16,
+                  marginHorizontal: 16, // Adicione margem horizontal para evitar corte no gráfico
                 },
-              ],
-            }}
-            width={labels.length * 100} // Altere o multiplicador conforme necessário para espaçamento
-            height={220}
-            chartConfig={{
-              backgroundColor: "#e26a00",
-              backgroundGradientFrom: "#fb8c00",
-              backgroundGradientTo: "#ffa726",
-              decimalPlaces: 2,
-              color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-              labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-              style: {
-                borderRadius: 16,
-                marginHorizontal: 16, // Adicione margem horizontal para evitar corte no gráfico
-              },
-              propsForDots: { r: "6", strokeWidth: "2", stroke: "#ffa726" },
-            }}
-            bezier
-            style={styles.chart}
-          />
+                propsForDots: { r: "6", strokeWidth: "2", stroke: "#ffa726" },
+              }}
+              bezier
+              style={styles.chart}
+            />
+          </View>
         </ScrollView>
 
         <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[styles.button, styles.exportButton]}
-            onPress={exportToPDF}
-          >
-            <Text style={styles.buttonText}>Exportar para PDF</Text>
-          </TouchableOpacity>
-
           <TouchableOpacity
             style={[styles.button, styles.closeButton]}
             onPress={closeModal}
@@ -237,12 +274,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-    paddingTop: 20, // Ajustar conforme necessário para mover o conteúdo para baixo
+    backgroundColor: "rgba(255, 255, 255, 255)",
+    paddingTop: 70, // Ajustar conforme necessário para mover o conteúdo para baixo
+    elevation: 5,
   },
   scrollContainer: {
     flex: 1,
-    width: "100%",
   },
   scrollViewContent: {
     flexGrow: 1,
@@ -251,14 +288,14 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   title: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#000",
-    marginBottom: 20,
-    // Adicionar paddingTop aqui se você não quiser adicionar no modalOverlay
+    fontWeight: "bold", // Negrito
+    fontSize: 22, // Tamanho da fonte maior
+    marginBottom: 20, // Espaço abaixo do título
+    textAlign: "center", // Centralizar texto
   },
   tableHeader: {
     alignSelf: "stretch",
+    textAlign: "center",
     flexDirection: "row",
     justifyContent: "space-between",
     padding: 10,
@@ -268,18 +305,23 @@ const styles = StyleSheet.create({
   headerText: {
     fontWeight: "bold",
     textAlign: "center",
+    padding: 5,
   },
   recordRow: {
     alignSelf: "stretch",
     flexDirection: "row",
     justifyContent: "space-between",
     padding: 10,
+    textAlign: "center",
     borderBottomWidth: 1,
+    width: "100%",
     borderBottomColor: "#ddd",
   },
   recordCell: {
     flex: 1,
-    textAlign: "left", // Alterado para 'left' para alinhar à esquerda.
+    width: "100%",
+    fontSize: 15,
+    textAlign: "center",
   },
   chartContainer: {
     alignSelf: "stretch",
@@ -308,21 +350,22 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 18,
     fontWeight: "bold",
-    
   },
   paginationContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "space-between", // Isso espalhará os botões e o texto de forma igual
     alignItems: "center",
     padding: 10,
-  },
-  pageNumberText: {
-    fontSize: 16,
   },
   paginationButton: {
     padding: 10,
     backgroundColor: "#E0E0E0",
     borderRadius: 5,
+    marginHorizontal: 20, // Adiciona espaço horizontal entre os botões e o texto
+  },
+  pageNumberText: {
+    fontSize: 16,
+    // Você pode adicionar margem aqui se precisar, mas `justifyContent: 'space-between'` deve ser suficiente
   },
   centeredView: {
     flex: 1,
@@ -431,6 +474,15 @@ const styles = StyleSheet.create({
     fontWeight: "bold", // Negrito
     fontSize: 18, // Tamanho da fonte
     textAlign: "center", // Centralizar texto
+  },
+  sectionContainer: {
+    backgroundColor: "#EDF3EF",
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 50,
+    elevation: 1,
+    borderWidth: 1,
+    borderColor: "#9CCC65",
   },
 });
 

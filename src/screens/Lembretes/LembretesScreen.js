@@ -1,11 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import RemindersConsultationScreen from './Consulta/RemindersConsultationScreen';
 
 const LembretesScreen = ({ navigation }) => {
+  const [isModalVisible, setModalVisible] = useState(false);
+
+  // Funções para abrir e fechar o modal
+  const openModal = () => setModalVisible(true);
+  const closeModal = () => setModalVisible(false);
+
+    // Função para navegar para a tela de visualização
+    const navigateToRelReminders = () => {
+      navigation.navigate('RelRemindersConsultation');
+    };
+
   return (
     <SafeAreaView style={styles.container}>
-
-
       <View style={styles.content}>
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Medicamentos</Text>
@@ -19,14 +29,16 @@ const LembretesScreen = ({ navigation }) => {
 
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Consultas</Text>
-          <TouchableOpacity style={styles.button} onPress={() => {}}>
+          <TouchableOpacity style={styles.button} onPress={openModal}>
             <Text style={styles.buttonText}>Registrar</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={() => {}}>
+          <TouchableOpacity style={styles.button} onPress={navigateToRelReminders}>
             <Text style={styles.buttonText}>Visualizar</Text>
           </TouchableOpacity>
         </View>
       </View>
+
+      <RemindersConsultationScreen isVisible={isModalVisible} onClose={closeModal} />
     </SafeAreaView>
   );
 };
