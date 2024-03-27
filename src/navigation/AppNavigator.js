@@ -23,7 +23,7 @@ const AppNavigator = () => {
     <Stack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: '#60B886', // Define a cor de fundo do cabeçalho
+          backgroundColor: '#65BF85', // Define a cor de fundo do cabeçalho
         },
         headerTintColor: '#fff', // Define a cor dos títulos e botões do cabeçalho
         headerTitleStyle: {
@@ -33,16 +33,16 @@ const AppNavigator = () => {
     >
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
-      <Stack.Screen name="Home" component={HomeScreen} />
-      <Stack.Screen name="Perfil" component={PerfilScreen} />
-      <Stack.Screen name="DCNT" component={DCNTScreen} />
+      <Stack.Screen name="Menu" component={HomeScreen} />
+      <Stack.Screen name="Dados Pessoais" component={PerfilScreen} />
+      <Stack.Screen name="Pressão / Diabetes" component={DCNTScreen} />
       <Stack.Screen name="Receitas" component={MedicalPrescriptionScreen} />
-      <Stack.Screen name="InformationSaude" component={InformationSaudeScreen} />
-      <Stack.Screen name="InfoSaudePG" component={InfoSaudePGScreen} /> 
-      <Stack.Screen name="Medication" component={MedicationScreen} /> 
-      <Stack.Screen name="InfSaude" component={DadosSaudeSaudeScreen} /> 
+      <Stack.Screen name="Perfil" component={InformationSaudeScreen} />
+      <Stack.Screen name="Histórico" component={InfoSaudePGScreen} /> 
+      <Stack.Screen name="Medicamentos" component={MedicationScreen} /> 
+      <Stack.Screen name="Informações Saúde" component={DadosSaudeSaudeScreen} /> 
       <Stack.Screen name="Lembretes" component={LembretesScreen} /> 
-      <Stack.Screen name="RelRemindersConsultation" component={RelRemindersConsultationScreen} /> 
+      <Stack.Screen name="Consultas" component={RelRemindersConsultationScreen} /> 
 
 
 

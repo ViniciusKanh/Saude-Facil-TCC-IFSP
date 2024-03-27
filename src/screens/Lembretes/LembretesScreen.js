@@ -11,7 +11,7 @@ const LembretesScreen = ({ navigation }) => {
 
     // Função para navegar para a tela de visualização
     const navigateToRelReminders = () => {
-      navigation.navigate('RelRemindersConsultation');
+      navigation.navigate('Consultas');
     };
 
   return (
@@ -46,6 +46,7 @@ const LembretesScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    justifyContent: "center", // Isso vai centralizar os contêineres verticalmente
     backgroundColor: '#FFFFFF',
   },
   header: {
@@ -64,10 +65,10 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: '#EDF3EF',
-    borderRadius: 8,
-    padding: 16,
+    widht: "80%",
+    borderRadius: 10,
+    padding: 20,
     marginBottom: 20,
-    elevation: 1,
     borderWidth: 1,
     borderColor: '#9CCC65',
   },

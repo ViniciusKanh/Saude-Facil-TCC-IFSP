@@ -108,15 +108,15 @@ const InformationSaudeScreen = () => {
 
   // Adicione funções para lidar com a navegação quando os botões são pressionados
   const handlePResumoPG = () => {
-    navigation.navigate("InfoSaudePG");
+    navigation.navigate("Histórico");
   };
 
     // Adicione funções para lidar com a navegação quando os botões são pressionados
     const handlePressInfoSaude = () => {
-      navigation.navigate("InfSaude");
+      navigation.navigate("Informações Saúde");
     };
   const handlePressMedicamentos = () => {
-    navigation.navigate("Medication");
+    navigation.navigate("Medicamentos");
 
     
   };
@@ -126,7 +126,7 @@ const InformationSaudeScreen = () => {
   };
 
   const handlePressDadosPessoais = () => {
-    navigation.navigate("Perfil");
+    navigation.navigate("Dados Pessoais");
   };
 
   return (
@@ -149,21 +149,6 @@ const InformationSaudeScreen = () => {
             {userData?.age ? `${userData.age} anos` : ""} (
             {userData?.classification})
           </Text>
-          <Text style={styles.healthInfo}>
-            Hipertenso: {userData?.hasHypertension ? "Sim" : "Não"}
-          </Text>
-          <Text style={styles.healthInfo}>
-            Diabético: {userData?.hasDiabetes ? "Sim" : "Não"}
-          </Text>
-          <Text style={styles.healthInfo}>
-            Doador de órgãos: {userData?.isOrganDonor ? "Sim" : "Não"}
-          </Text>
-          <View style={styles.healthInfoContainer}>
-            <Text style={styles.healthInfo}>
-              IMC: {imc} - {classificacao.classificacao} (Grau{" "}
-              {classificacao.grau})
-            </Text>
-          </View>
         </View>
       </View>
       <TouchableOpacity style={styles.button} onPress={handlePressInfoSaude}>
@@ -171,15 +156,12 @@ const InformationSaudeScreen = () => {
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.button} onPress={handlePResumoPG}>
-        <Text style={styles.buttonText}>Resumo da Pressão Arterial e Glicemia</Text>
+        <Text style={styles.buttonText}>Hitórico de Pressão Arterial e Glicemia</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.button} onPress={handlePressLembretes}>
-        <Text style={styles.buttonText}>Lembretes</Text>
-      </TouchableOpacity>
 
       <TouchableOpacity style={styles.button} onPress={handlePressMedicamentos}>
-        <Text style={styles.buttonText}>Medicamento</Text>
+        <Text style={styles.buttonText}>Medicamentos</Text>
       </TouchableOpacity>
 
       <TouchableOpacity

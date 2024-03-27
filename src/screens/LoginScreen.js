@@ -20,7 +20,7 @@ const LoginScreen = ({ navigation }) => {
     signInWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
         Alert.alert("Sucesso", "Login efetuado com sucesso");
-        navigation.navigate("Home"); // Adiciona esta linha
+        navigation.navigate("Menu"); // Adiciona esta linha
       })
       .catch((error) => {
         Alert.alert("Erro no login", error.message);

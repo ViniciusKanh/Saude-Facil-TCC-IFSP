@@ -112,23 +112,27 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center", // Isso vai centralizar os contêineres verticalmente
     alignItems: "center",
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#FFFFFF",
   },
   registroContainer: {
     width: "80%",
     alignItems: "center",
     padding: 20,
     borderRadius: 10,
-    backgroundColor: "#e8e8e8",
+    backgroundColor: "#EDF3EF",
     marginBottom: 20, // Valor reduzido para diminuir o espaço
+    borderWidth: 1,
+    borderColor: '#9CCC65',
   },
   visualizacaoContainer: {
     width: "80%",
     alignItems: "center",
     padding: 20,
     borderRadius: 10,
-    backgroundColor: "#e8e8e8",
+    backgroundColor: "#EDF3EF",
     marginTop: 20, // Valor reduzido para diminuir o espaço
+    borderWidth: 1,
+    borderColor: '#9CCC65',
   },
   title: {
     fontWeight: "bold",
