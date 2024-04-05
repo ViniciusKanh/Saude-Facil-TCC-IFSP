@@ -25,6 +25,8 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import * as ImagePicker from "expo-image-picker";
 import { getAuth } from "firebase/auth";
 import Icon from "react-native-vector-icons/FontAwesome";
+import * as LocalAuthentication from 'expo-local-authentication';
+
 
 // Componente da tela de prescrições médicas
 const MedicalPrescriptionScreen = () => {
@@ -76,6 +78,7 @@ const MedicalPrescriptionScreen = () => {
     // Chamadas às funções de busca ao carregar o componente
     fetchTypesPrescription();
     fetchPrescriptions();
+    promptForBiometricAuthentication();
   }, []);
 
   // Função para buscar as prescrições médicas do banco de dados
@@ -254,6 +257,35 @@ const MedicalPrescriptionScreen = () => {
     </View>
   );
 
+  const promptForBiometricAuthentication = async () => {
+    const compatible = await LocalAuthentication.hasHardwareAsync();
+    const savedBiometrics = await LocalAuthentication.isEnrolledAsync();
+    
+    if (compatible && savedBiometrics) {
+      try {
+        const result = await LocalAuthentication.authenticateAsync({
+          promptMessage: 'Autenticação necessária',
+          cancelLabel: 'Cancelar', // Deve ser uma string, não um booleano
+          fallbackLabel: 'Use sua senha',
+        });
+  
+        if (result.success) {
+          // Autenticação bem-sucedida, continue a execução normalmente
+        } else {
+          // Autenticação falhou ou foi cancelada
+          Alert.alert('Autenticação necessária', 'Autenticação via Face ID falhou ou foi cancelada. Você não pode acessar esta área sem autenticação.');
+          // Ação após falha, como voltar à tela anterior
+        }
+      } catch (error) {
+        // Tratamento de erro da tentativa de autenticação
+        Alert.alert('Erro de autenticação', 'Ocorreu um erro durante a autenticação. Por favor, tente novamente.');
+      }
+    } else {
+      // Hardware não compatível ou sem biometria configurada
+      Alert.alert('Sem suporte a Face ID', 'Seu dispositivo não suporta ou não tem Face ID configurado.');
+      // Ação após detecção de falta de suporte ou configuração, como voltar à tela anterior
+    }
+  };
   // Renderização do componente
   return (
     <View style={styles.container}>
@@ -489,6 +521,10 @@ const styles = StyleSheet.create({
   },
   icon: {
     marginHorizontal: 10,
+  },
+  text: {
+    fontSize: 18,
+    marginBottom: 20,
   },
 });
 

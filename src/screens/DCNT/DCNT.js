@@ -37,32 +37,32 @@ const DCNTScreen = ({ navigation }) => {
 
   return (
     <View style={styles.screenContainer}>
-      <View style={styles.registroContainer}>
-        <Text style={styles.title}>Registro</Text>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => setGlicemiaModalVisible(true)}
-        >
-          <Text style={styles.buttonText}>Glicemia</Text>
-        </TouchableOpacity>
+      <Text style={styles.title}>Pressão</Text>
+      <View style={styles.pressaoContainer}>
         <TouchableOpacity
           style={styles.button}
           onPress={() => setPressaoArterialModalVisible(true)}
         >
-          <Text style={styles.buttonText}>Pressão Arterial</Text>
+          <Text style={styles.buttonText}>Registrar</Text>
         </TouchableOpacity>
-      </View>
-
-      <View style={styles.visualizacaoContainer}>
-        <Text style={styles.title}>Visualização</Text>
         <TouchableOpacity
           style={styles.button}
           onPress={openRelPressaoArterialModal}
         >
-          <Text style={styles.buttonText}>Relatório de Pressão</Text>
+          <Text style={styles.buttonText}>Visualizar</Text>
+        </TouchableOpacity>
+      </View>
+
+      <Text style={styles.title}>Diabetes</Text>
+      <View style={styles.diabetesContainer}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => setGlicemiaModalVisible(true)}
+        >
+          <Text style={styles.buttonText}>Registrar</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.button} onPress={openRelGlicemiaModal}>
-          <Text style={styles.buttonText}>Relatório de Glicemia</Text>
+          <Text style={styles.buttonText}>Visualizar</Text>
         </TouchableOpacity>
       </View>
 
@@ -114,42 +114,44 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#FFFFFF",
   },
-  registroContainer: {
+  pressaoContainer: {
     width: "80%",
-    alignItems: "center",
     padding: 20,
+    marginBottom: 20,
     borderRadius: 10,
     backgroundColor: "#EDF3EF",
-    marginBottom: 20, // Valor reduzido para diminuir o espaço
     borderWidth: 1,
-    borderColor: '#9CCC65',
+    borderColor: '#65BF85',
   },
-  visualizacaoContainer: {
+  diabetesContainer: {
     width: "80%",
-    alignItems: "center",
     padding: 20,
+    marginBottom: 20,
     borderRadius: 10,
     backgroundColor: "#EDF3EF",
-    marginTop: 20, // Valor reduzido para diminuir o espaço
     borderWidth: 1,
-    borderColor: '#9CCC65',
+    borderColor: '#65BF85',
   },
   title: {
-    fontWeight: "bold",
-    fontSize: 22,
-    marginBottom: 10,
+    fontSize: 25,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    color: '#000000',
+    textAlign: 'center',
   },
   button: {
-    backgroundColor: "#2e7d32",
+    backgroundColor: "#ffff",
     padding: 15,
     borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#65BF85",
     marginVertical: 10, // Espaço uniforme acima e abaixo de cada botão
     width: "100%", // Faz com que o botão se expanda para a largura do contêiner
   },
   buttonText: {
-    color: "#fff",
+    color: "#000",
     fontSize: 18,
     textAlign: "center", // Centraliza o texto no botão
   },
 });
-export default DCNTScreen;
+export default DCNTScreen;

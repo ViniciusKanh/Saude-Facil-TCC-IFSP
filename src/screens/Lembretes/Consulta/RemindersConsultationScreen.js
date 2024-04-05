@@ -360,7 +360,7 @@ const styles = StyleSheet.create({
   dateButton: {
     backgroundColor: "#007bff",
     padding: 10,
-    borderRadius: 5,
+    borderRadius: 10,
     marginBottom: 10, // Espaçamento entre o botão e o texto
   },
   dateTimeText: {

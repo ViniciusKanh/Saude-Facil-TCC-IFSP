@@ -202,15 +202,25 @@ const styles = StyleSheet.create({
   profileBirthDate: {
     fontSize: 16,
   },
+  menu: {
+    justifyContent: "center",
+    alignItems: "center",
+    
+  },
   button: {
-    backgroundColor: "#e8f5e9",
-    padding: 20,
-    margin: 10,
-    borderRadius: 5,
+    backgroundColor: "#fff",
+    width: 350,
+    padding: 23,
+    margin: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#65BF85"
   },
   buttonText: {
     color: "#2e7d32",
     fontWeight: "bold",
+    fontSize: 16
   },
   profileImageContainer: {
     // Ajustar conforme o layout desejado
@@ -239,5 +249,6 @@ const styles = StyleSheet.create({
     marginTop: 4, // Ajuste o valor conforme necessário para o espaçamento
   },
 });
+
 
 export default InformationSaudeScreen;

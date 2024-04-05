@@ -1,11 +1,11 @@
 // HomeScreen.js
-import React from 'react';
-import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import React, { useState,  } from 'react';
+import { StyleSheet, View, Text, TouchableOpacity, Image, Modal, Button } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import Logo from '../components/Logo'; // Certifique-se de que o caminho está correto
+import Logo from '../components/Logo';
 
 const HomeScreen = ({ navigation }) => {
-  // Atualizado para navegar para a tela correspondente
+
   const handlePress = (screen) => {
     navigation.navigate(screen);
   };
@@ -20,7 +20,7 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Logo />
+    <Logo width={200} height={200} />
       <View style={styles.iconGrid}>
         {/* Atualize o parâmetro onPress com o nome da tela para a qual deseja navegar */}
         <Icon name="bell" label="Lembrete" screen="Lembretes" />
@@ -28,8 +28,8 @@ const HomeScreen = ({ navigation }) => {
         <Icon name="file-text" label="Receitas" screen="Receitas" />
         <Icon name="line-chart" label="Pressão / Diabetes" screen="Pressão / Diabetes" />
       </View>
-      {/* Atualize este Icon para navegar para a PerfilScreen */}
     </View>
+
   );
 };
 const styles = StyleSheet.create({
@@ -45,6 +45,46 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     width: '100%',
     marginTop: 20,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    paddingHorizontal: 10,
+    paddingTop: 10,
+  },
+  menuText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    flex: 1,
+    textAlign: 'center',
+  },
+  profilePic: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 22,
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 35,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
   },
   iconWrapper: {
     backgroundColor: '#e8f5e9',
@@ -70,6 +110,10 @@ const styles = StyleSheet.create({
   },
   profileIcon: {
     width: '80%', // Ajustar a largura conforme necessário
+  },
+  text: {
+    fontSize: 18,
+    marginBottom: 20,
   },
 });
 
