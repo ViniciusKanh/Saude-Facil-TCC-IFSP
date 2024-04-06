@@ -11,9 +11,7 @@ import {
 } from 'react-native';
 import { auth } from '../config/firebaseConfig';
 import Logo from "../components/Logo";
-import * as LocalAuthentication from 'expo-local-authentication';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import ReactNativeBiometrics from 'react-native-biometrics';
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
@@ -34,58 +32,6 @@ const LoginScreen = ({ navigation }) => {
     navigation.navigate("Register");
   };
 
-  const promptBiometricLogin = () => {
-    ReactNativeBiometrics.isSensorAvailable()
-      .then((resultObject) => {
-        const { available, biometryType } = resultObject;
-
-        if (available && biometryType === ReactNativeBiometrics.FaceID) {
-          ReactNativeBiometrics.simplePrompt({ promptMessage: 'Confirme o seu rosto' })
-            .then((resultObject) => {
-              const { success } = resultObject;
-
-              if (success) {
-                console.log('Face ID autenticado');
-                // Aqui você poderia chamar handleLogin ou outra lógica de autenticação
-              } else {
-                console.log('Face ID falhou ou foi cancelado');
-              }
-            })
-            .catch(() => {
-              console.log('Falha ao autenticar com Face ID');
-            });
-        } else {
-          console.log('Face ID não disponível');
-        }
-      })
-      .catch(() => {
-        console.log('Erro ao verificar o sensor');
-      });
-  };
-
-  const handleBiometricAuth = async () => {
-    const hasHardware = await LocalAuthentication.hasHardwareAsync();
-    const isEnrolled = await LocalAuthentication.isEnrolledAsync();
-    const supportedTypes = await LocalAuthentication.supportedAuthenticationTypesAsync();
-  
-    if (hasHardware && isEnrolled && supportedTypes.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) {
-      const result = await LocalAuthentication.authenticateAsync({
-        promptMessage: 'Authenticate',
-        cancelLabel: 'Cancelar',
-        disableDeviceFallback: false,
-      });
-  
-      if (result.success) {
-        // Autenticação bem-sucedida
-        Alert.alert('Autenticação', 'Sucesso no Face ID!');
-        // Navegação ou outras ações pós-autenticação
-      } else {
-        Alert.alert('Autenticação', 'Falha na autenticação!');
-      }
-    } else {
-      Alert.alert('Dispositivo não compatível', 'Seu dispositivo não suporta ou não tem o Face ID configurado.');
-    }
-  };
 
   return (
     <ScrollView style={styles.scroll}>

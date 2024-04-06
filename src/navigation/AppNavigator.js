@@ -6,8 +6,6 @@ import { getAuth, signOut } from 'firebase/auth';
 import { getStorage, ref, getDownloadURL } from 'firebase/storage';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native'; // Importe useNavigation
-import LoginScreen from '../screens/LoginScreen';
-import RegisterScreen from '../screens/RegisterScreen';
 import HomeScreen from '../screens/HomeScreen';
 import PerfilScreen from '../screens/PerfilScreen';
 import DCNTScreen from '../screens/DCNT/DCNT';
@@ -18,6 +16,8 @@ import MedicationScreen from '../screens/MedicationScreen';
 import DadosSaudeSaudeScreen from '../screens/InfSaudeScreen'; 
 import LembretesScreen from '../screens/Lembretes/LembretesScreen'; 
 import RelRemindersConsultationScreen from './../screens/Lembretes/Consulta/RelRemindersConsultationScreen';
+import AuthNavigator from './AuthNavigator';
+
 
 const Stack = createNativeStackNavigator();
 
@@ -48,19 +48,20 @@ const AppNavigator = () => {
   const handleLogout = () => {
     signOut(auth)
       .then(() => {
-        // Deslogou com sucesso, redirecione para a tela de login
+        // Deslogou com sucesso, redirecione para o AuthNavigator
+        // Isso irá automaticamente levar o usuário para a primeira tela dentro do AuthNavigator, que é a tela de Login
         navigation.reset({
           index: 0,
-          routes: [{ name: "Login" }], // O nome 'Login' deve corresponder ao nome da rota definida no Stack.Navigator
+          routes: [{ name: "Auth" }], // Aqui você está resetando para o AuthNavigator
         });
-        setModalVisible(false)
+        setModalVisible(false);
       })
       .catch((error) => {
         // Houve um erro no logout
         Alert.alert("Erro ao sair", error.message);
       });
   };
-
+  
   // Defina a função navigateToScreen
   const navigateToScreen = (screenName) => {
     navigation.navigate(screenName);
@@ -115,9 +116,7 @@ const AppNavigator = () => {
         })}
       >
       {/* Stack.Screen para Login, Register, Home, e outras telas */}
-      <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Register" component={RegisterScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Home" component={HomeScreen} /* Adicione opções aqui se necessário */ />
+      <Stack.Screen name="Auth" component={AuthNavigator} options={{ headerShown: false }} />
         <Stack.Screen name="Menu" component={HomeScreen} />
         <Stack.Screen name="Dados Pessoais" component={PerfilScreen} />
         <Stack.Screen name="Pressão / Diabetes" component={DCNTScreen} />
