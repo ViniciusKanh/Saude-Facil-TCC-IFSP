@@ -1,9 +1,11 @@
+
 //AppNavigator.js
 import React, { useEffect, useState } from 'react';
-import { StyleSheet,Image, TouchableOpacity, View, Text, Modal, Button } from 'react-native';
+import { StyleSheet, Image, TouchableOpacity, View, Text, Modal, Button } from 'react-native';
 import { getAuth, signOut } from 'firebase/auth';
 import { getStorage, ref, getDownloadURL } from 'firebase/storage';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native'; // Importe useNavigation
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import HomeScreen from '../screens/HomeScreen';
@@ -20,15 +22,16 @@ import RelRemindersConsultationScreen from './../screens/Lembretes/Consulta/RelR
 const Stack = createNativeStackNavigator();
 
 const AppNavigator = () => {
-
   const [modalVisible, setModalVisible] = useState(false);
   const [userProfileImageUrl, setUserProfileImageUrl] = useState('');
   const auth = getAuth();
   const storage = getStorage();
-  const placeholderImage = require('../assets/perfil/profile-pic.jpg'); // Adicione o caminho para a imagem padrão aqui
 
-   // Carregue a imagem do perfil do usuário quando ele estiver autenticado
-   useEffect(() => {
+  const placeholderImage = require('../assets/perfil/profile-pic.jpg'); // Caminho para a imagem padrão
+  // Hook para obter o objeto de navegação
+  const navigation = useNavigation();
+
+  useEffect(() => {
     if (auth.currentUser) {
       const userImageRef = ref(storage, `profile_images/${auth.currentUser.uid}.jpg`);
       getDownloadURL(userImageRef)
@@ -42,39 +45,28 @@ const AppNavigator = () => {
     }
   }, [auth.currentUser]);
 
-  const login = () => {
-    // Aqui vai sua lógica de autenticação...
-    // Após o login bem-sucedido, resete a pilha de navegação
-    navigation.reset({
-      index: 0, // Define o início da nova pilha
-      routes: [{ name: 'Home' }], // Define a tela Home como a única tela na pilha
-    });
-  };
-
   const handleLogout = () => {
     signOut(auth)
       .then(() => {
-        // Após o logout bem-sucedido, resete a pilha de navegação para levar o usuário de volta à tela de Login
+        // Deslogou com sucesso, redirecione para a tela de login
         navigation.reset({
           index: 0,
-          routes: [{ name: 'Login' }],
+          routes: [{ name: "Login" }], // O nome 'Login' deve corresponder ao nome da rota definida no Stack.Navigator
         });
+        setModalVisible(false)
       })
       .catch((error) => {
-        // Trate erros de logout aqui
-        console.error("Erro no logout", error);
+        // Houve um erro no logout
+        Alert.alert("Erro ao sair", error.message);
       });
   };
+
+  // Defina a função navigateToScreen
   const navigateToScreen = (screenName) => {
     navigation.navigate(screenName);
-    setModalVisible(false); // Fechar o modal após navegar
+    setModalVisible(false); // Feche o modal após a navegação
   };
 
-  const screenOptions = {
-    headerStyle: { backgroundColor: '#65BF85' },
-    headerTintColor: '#fff',
-    headerTitleStyle: { fontWeight: 'bold' },
-  };
 
   const getHeaderRight = (routeName) => {
     if (routeName === "Login" || routeName === "Register") {
@@ -91,12 +83,15 @@ const AppNavigator = () => {
     }
   };
   
+
+  
   return (
     <>
-      <Stack.Navigator
+     <Stack.Navigator
         screenOptions={({ route }) => ({
           headerStyle: {
             backgroundColor: '#65BF85',
+            height: 100, // Ajuste a altura conforme necessário
           },
           headerTintColor: '#fff',
           headerTitleStyle: {
@@ -121,8 +116,8 @@ const AppNavigator = () => {
       >
       {/* Stack.Screen para Login, Register, Home, e outras telas */}
       <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="Register" component={RegisterScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="Register" component={RegisterScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="Home" component={HomeScreen} /* Adicione opções aqui se necessário */ />
         <Stack.Screen name="Menu" component={HomeScreen} />
         <Stack.Screen name="Dados Pessoais" component={PerfilScreen} />
         <Stack.Screen name="Pressão / Diabetes" component={DCNTScreen} />
@@ -168,10 +163,9 @@ const AppNavigator = () => {
         </View>
       </Modal>
       </>
-  );
-  
 
-  
+  );
+
 };
 
 const styles = StyleSheet.create({
@@ -227,8 +221,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   profilePic: {
-    width: 45,
-    height: 35,
+    width: 50,
+    height: 40,
     borderRadius: 15,
     marginRight: 10
   },
